@@ -28,10 +28,11 @@ import PhoneInput from './PhoneInput'
 
 type NotifiClientReturnType = ReturnType<typeof useNotifiClient>
 
+type NotifiClientReturnType = ReturnType<typeof useNotifiClient>
+
 type NotificationCardProps = {
   onBackClick: () => void
   email: string
-
   phoneNumber: string
   telegram: string
   setPreview: Dispatch<SetStateAction<boolean>>
@@ -53,6 +54,7 @@ const NotificationsCard = ({
   createAlert,
   data,
   email,
+  fetchData,
   getConfiguration,
   isAuthenticated,
   logIn,
@@ -162,6 +164,7 @@ const NotificationsCard = ({
       if (!isAuthenticated && wallet && wallet.publicKey) {
         try {
           await logIn((wallet as unknown) as MessageSigner)
+          setPreview(true)
         } catch (e) {
           handleError([e])
         }
@@ -169,7 +172,7 @@ const NotificationsCard = ({
       }
       setLoading(false)
     },
-    [setLoading, isAuthenticated, wallet, setErrorMessage, logIn]
+    [setLoading, isAuthenticated, wallet, setErrorMessage, setPreview, logIn]
   )
 
   const handleSave = useCallback(async () => {
@@ -201,6 +204,7 @@ const NotificationsCard = ({
             }
           }
           if (results) {
+            setPreview(true)
             setEmail(
               results[0].targetGroup?.emailTargets[0]?.emailAddress ?? ''
             )
@@ -208,7 +212,6 @@ const NotificationsCard = ({
             setTelegram(
               results[0].targetGroup?.telegramTargets[0]?.telegramId ?? ''
             )
-            setPreview(true)
           }
           checkTelegramUnconfirmed(results)
           if (results) {
@@ -248,8 +251,10 @@ const NotificationsCard = ({
             )
           }
         }
+        onBackClick?.()
         setUnsavedChanges(false)
       } catch (e) {
+        console.log(e)
         handleError([e])
       }
     }
@@ -259,11 +264,13 @@ const NotificationsCard = ({
     checkTelegramUnconfirmed,
     connected,
     createAlert,
+    fetchData,
     isAuthenticated,
     localEmail,
     localPhoneNumber,
     localTelegram,
     logIn,
+    onBackClick,
     setEmail,
     setPhone,
     setPreview,
@@ -289,39 +296,22 @@ const NotificationsCard = ({
     setUnsavedChanges(true)
   }
 
-  const isSame =
-    email === localEmail &&
-    phoneNumber === localPhoneNumber &&
-    telegram === localTelegram
-
   const disabled =
     (isAuthenticated && !hasUnsavedChanges) ||
     (localEmail === '' && localTelegram === '' && localPhoneNumber === '') ||
     errorMessage !== ''
 
-  const handleBackClick = useCallback(() => {
-    if (isSame && !disabled) {
-      setPreview(true)
-      return
-    }
-    if (disabled) {
-      onBackClick()
-    } else {
-      setPreview(false)
-    }
-  }, [disabled, isSame, onBackClick, setPreview])
-
   return (
-    <div className="bg-bkg-5 w-full p-4 md:p-6 rounded-lg">
-      <div className="flex flex-row items-center align-center">
-        <Button className="bg-transparent" onClick={handleBackClick}>
+    <div className="bg-bkg-5 p-4 md:p-6 rounded-lg shadow-lg ">
+      <div className=" flex flex-row items-center align-center">
+        <Button className="bg-transparent" onClick={onBackClick}>
           <ArrowLeftIcon className="w-6 h-6" fill="grey" />
         </Button>
         <NotifiFullLogo />
       </div>
       {!connected ? (
         <>
-          <div className="text-sm items-center w-full text-center text-th-fgd-1">
+          <div className="text-sm text-th-fgd-1">
             Connect wallet to see options
           </div>
         </>
@@ -384,13 +374,14 @@ const NotificationsCard = ({
           </div>
           <div className=" text-xs  place-items-center  align-items-center grid flex-row text-center">
             <div className="w-full place-items-center ">
-              Already Subscribed?{' '}
+              Already Subscribed?
               <a
                 className="text-xs text-blue cursor-pointer "
                 onClick={handleRefresh}
                 rel="noreferrer"
                 title="Click here to load your alert details."
               >
+                {' '}
                 Click here to load your alert details.
               </a>
             </div>
@@ -409,7 +400,7 @@ const NotificationsCard = ({
                   : 'Fetch stored values for existing accounts'
               }
             >
-              {alerts && alerts.length > 0 ? 'Update' : 'Subscribe'}
+              Subscribe
             </Button>
 
             <div className="h-3 grid text-xs w-full place-items-center">
