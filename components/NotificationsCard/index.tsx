@@ -2,10 +2,11 @@ import useRealm from '../../hooks/useRealm'
 import useWalletStore from '../../stores/useWalletStore'
 import Button from '../Button'
 import Input from '../inputs/Input'
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import React, { FunctionComponent, useEffect, useState, Fragment } from 'react'
 import {
   ArrowLeftIcon,
   ChatAltIcon,
+  CheckIcon,
   MailIcon,
   PaperAirplaneIcon,
 } from '@heroicons/react/solid'
@@ -18,6 +19,10 @@ import {
 import { useRouter } from 'next/router'
 import { EndpointTypes } from '@models/types'
 import { useCallback } from 'react'
+import countryData from '@components/NotificationsCard/data'
+import { Listbox, Transition } from '@headlessui/react'
+import { ChevronDownIcon } from '@heroicons/react/solid'
+
 import NotifiFullLogo from './NotifiFullLogo'
 
 const firstOrNull = <T,>(
@@ -41,6 +46,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
   const [hasUnsavedChanges, setUnsavedChanges] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [telegramEnabled, setTelegramEnabled] = useState<boolean>(false)
+  const [countryDialCode, setCountryDialCode] = useState<string>('')
 
   const wallet = useWalletStore((s) => s.current)
   const connected = useWalletStore((s) => s.connected)
@@ -92,7 +98,26 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
     // Update state when server data changes
     const targetGroup = firstOrNull(data?.targetGroups)
     setEmail(firstOrNull(targetGroup?.emailTargets)?.emailAddress ?? '')
-    setPhone(firstOrNull(targetGroup?.smsTargets)?.phoneNumber ?? '')
+    const originalPhoneNumber = firstOrNull(targetGroup?.smsTargets)
+      ?.phoneNumber
+
+    let countryCodeLength = 0
+
+    if (originalPhoneNumber) {
+      countryCodeLength = originalPhoneNumber?.length - 10
+      const countryDialCode = originalPhoneNumber?.substring(
+        0,
+        countryCodeLength
+      )
+      setCountryDialCode(countryDialCode)
+    }
+
+    setPhone(
+      firstOrNull(targetGroup?.smsTargets)?.phoneNumber?.substring(
+        countryCodeLength,
+        originalPhoneNumber?.length
+      ) ?? ''
+    )
     setTelegram(firstOrNull(targetGroup?.telegramTargets)?.telegramId ?? '')
   }, [data])
 
@@ -127,6 +152,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
     setLoading(true)
 
     let localData = data
+
     // user is not authenticated
     if (!isAuthenticated() && wallet && wallet.publicKey) {
       try {
@@ -137,6 +163,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
       }
     }
 
+    const formattedPhone = `${countryDialCode}` + phone
     const alert = firstOrNull(localData?.alerts)
     const source = firstOrNull(localData?.sources)
     const filter = firstOrNull(localData?.filters)
@@ -146,7 +173,10 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
           const alertResult = await updateAlert({
             alertId: alert.id ?? '',
             emailAddress: email === '' ? null : email,
-            phoneNumber: phone.length < 12 ? null : phone,
+            phoneNumber:
+              formattedPhone.length < 10 + countryDialCode.length - 1
+                ? null
+                : formattedPhone,
             telegramId: telegram === '' ? null : telegram,
           })
 
@@ -165,7 +195,10 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
           const alertResult = await createAlert({
             name: `${realm?.account.name} notifications`,
             emailAddress: email === '' ? null : email,
-            phoneNumber: phone.length < 12 ? null : phone,
+            phoneNumber:
+              formattedPhone.length < 10 + countryDialCode.length - 1
+                ? null
+                : formattedPhone,
             telegramId: telegram === '' ? null : telegram,
             sourceId: source?.id ?? '',
             filterId: filter?.id ?? '',
@@ -199,16 +232,12 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
   }
 
   const handlePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value
-    if (val.length > 1) {
-      val = val.substring(2)
-    }
+    const val = e.target.value
 
     const re = /^[0-9\b]+$/
     if (val === '' || (re.test(val) && val.length <= 10)) {
-      setPhone('+1' + val)
+      setPhone(val)
     }
-
     setUnsavedChanges(true)
   }
 
@@ -218,6 +247,37 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
   }
 
   const disabled = isAuthenticated() && !hasUnsavedChanges
+  const allowedCountries = [
+    'United States',
+    'Australia',
+    'Austria',
+    'Belgium',
+    'Brazil',
+    'Canada',
+    'Denmark',
+    'Finland',
+    'France',
+    'Germany',
+    'Hong Kong',
+    'Hungary',
+    'Ireland',
+    'Malaysia',
+    'Norway',
+    'Philippines',
+    'Poland',
+    'Portugal',
+    'Singapore',
+    'South Korea',
+    'Spain',
+    'Sweden',
+    'Switzerland',
+    'Taiwan',
+    'United Kingdom',
+  ]
+
+  const viewableCountries = [...countryData].filter(({ name }) =>
+    allowedCountries.includes(name)
+  )
 
   return (
     <div className="bg-bkg-2 p-4 md:p-6 rounded-lg ">
@@ -256,7 +316,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
               <InputRow
                 label="email"
                 icon={
-                  <MailIcon className=" z-10 h-10 text-primary-light w-7 mr-1 mt-9 absolute left-3.5" />
+                  <MailIcon className="z-10 h-10 text-primary-light w-7 mr-1 mt-9 absolute left-3.5" />
                 }
               >
                 <Input
@@ -268,18 +328,83 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
                 />
               </InputRow>
               <InputRow
-                label="email"
+                label="phone"
                 icon={
                   <ChatAltIcon className=" z-10 h-10 text-primary-light w-7 mr-1 mt-9 absolute left-3" />
                 }
               >
                 <Input
-                  className="min-w-11/12 py-3 px-4 appearance-none w-11/12 pl-14 outline-0 focus:outline-none"
+                  className="min-w-11/12 py-3 pl-[120px] px-4 appearance-none w-11/12 outline-0 focus:outline-none"
                   type="tel"
                   value={phone}
                   onChange={handlePhone}
-                  placeholder="+1 XXX-XXXX"
+                  placeholder="XXX-XXX-XXXX"
                 />
+                <div className="absolute ml-12 inset-y-8 pr-10">
+                  <Listbox
+                    value={countryDialCode}
+                    onChange={setCountryDialCode}
+                  >
+                    <div className="relative mt-1">
+                      <Listbox.Button className="relative w-full cursor-default mb-1 rounded-lg bg-none py-2 pl-3 pr-7 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 sm:text-sm text-gray-400">
+                        <span className="block truncate">
+                          {countryDialCode}
+                        </span>
+                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                          <ChevronDownIcon
+                            className="h-5 w-5 text-gray-400"
+                            aria-hidden="true"
+                          />
+                        </span>
+                      </Listbox.Button>
+                      <Transition
+                        as={Fragment}
+                        leave="transition ease-in duration-100"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                      >
+                        <Listbox.Options className="absolute mt-1 max-h-60 w-[120px] overflow-auto rounded-md bg-bkg-3 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                          {viewableCountries.map(
+                            ({ dial_code, emoji }, idx) => (
+                              <Listbox.Option
+                                key={idx}
+                                className={({ active }) =>
+                                  `relative cursor-default select-none py-2 pl-2 pr-4  ${
+                                    active
+                                      ? 'bg-gray-800 text-grey-300'
+                                      : 'text-gray-300'
+                                  }`
+                                }
+                                value={dial_code}
+                              >
+                                {({ selected }) => (
+                                  <>
+                                    <span
+                                      className={`block truncate ${
+                                        selected ? 'font-medium' : 'font-normal'
+                                      }`}
+                                    >
+                                      <span className="pl-7 pr-3">{emoji}</span>
+                                      {dial_code}
+                                    </span>
+                                    {selected ? (
+                                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white-600">
+                                        <CheckIcon
+                                          className="h-5 w-5"
+                                          aria-hidden="true"
+                                        />
+                                      </span>
+                                    ) : null}
+                                  </>
+                                )}
+                              </Listbox.Option>
+                            )
+                          )}
+                        </Listbox.Options>
+                      </Transition>
+                    </div>
+                  </Listbox>
+                </div>
               </InputRow>
               {telegramEnabled && (
                 <InputRow

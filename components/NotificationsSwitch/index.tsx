@@ -236,20 +236,6 @@ export default function NotificationsSwitch() {
           />
         )}
         {modalState === ModalStates.Notifi && (
-          //  <NotificationsModal
-          //  wallet={(wallet as unknown) as WalletType}
-          //  network={cluster as string}
-          //  publicKey={REALMS_PUBLIC_KEY}
-          //  theme={theme === 'Dark' ? 'dark' : 'light'}
-          //  variables={themeVariables}
-          //  notifications={[{ name: 'New proposals', detail: 'Event' }]}
-          //  onBackClick={() =>
-          //    setNotificationStore((state) => {
-          //      state.modalState = ModalStates.Selection
-          //    })
-          //  }
-          //  channels={['web3', 'email', 'sms', 'telegram']}
-          //  />
           <NotificationsCard
             onBackClick={() =>
               setNotificationStore((state) => {
