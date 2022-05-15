@@ -101,20 +101,31 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
     const originalPhoneNumber = firstOrNull(targetGroup?.smsTargets)
       ?.phoneNumber
 
-    let countryCodeLength = 0
+    let possibleCountryCode = ''
+    const countryMap = [...viewableCountries]
 
     if (originalPhoneNumber) {
-      countryCodeLength = originalPhoneNumber?.length - 10
-      const countryDialCode = originalPhoneNumber?.substring(
-        0,
-        countryCodeLength
-      )
-      setCountryDialCode(countryDialCode)
+      for (const letter of originalPhoneNumber) {
+        possibleCountryCode += letter
+        const searchCountries = countryMap.filter(
+          (country) =>
+            country.dial_code.includes(possibleCountryCode) &&
+            possibleCountryCode === country.dial_code
+        )
+
+        if (
+          searchCountries.length === 1 ||
+          (searchCountries[0] && searchCountries[0].dial_code == '+1')
+        ) {
+          setCountryDialCode(possibleCountryCode)
+          break
+        }
+      }
     }
 
     setPhone(
       firstOrNull(targetGroup?.smsTargets)?.phoneNumber?.substring(
-        countryCodeLength,
+        possibleCountryCode.length,
         originalPhoneNumber?.length
       ) ?? ''
     )
@@ -184,7 +195,6 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
             if (alertResult.targetGroup?.telegramTargets?.length > 0) {
               const target = alertResult.targetGroup?.telegramTargets[0]
               if (target && !target.isConfirmed) {
-                console.log(target.confirmationUrl)
                 if (target.confirmationUrl) {
                   window.open(target.confirmationUrl)
                 }
@@ -208,7 +218,6 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
             if (alertResult.targetGroup?.telegramTargets?.length > 0) {
               const target = alertResult.targetGroup?.telegramTargets[0]
               if (target && !target.isConfirmed) {
-                console.log(target.confirmationUrl)
                 if (target.confirmationUrl) {
                   window.open(target.confirmationUrl)
                 }

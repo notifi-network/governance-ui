@@ -13,12 +13,6 @@ const countryData: CountryData[] = [
     emoji: '🇺🇸',
   },
   {
-    name: 'Afghanistan',
-    dial_code: '+93',
-    code: 'AF',
-    emoji: '🇦🇫',
-  },
-  {
     name: 'Aland Islands',
     dial_code: '+358',
     code: 'AX',
