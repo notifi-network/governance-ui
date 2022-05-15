@@ -13,6 +13,7 @@ import React, {
 import {
   ArrowLeftIcon,
   ChatAltIcon,
+  CheckIcon,
   MailIcon,
   PaperAirplaneIcon,
   ChevronDownIcon,
