@@ -304,7 +304,8 @@ export function useVotingPlugins() {
       if (
         vsrClient &&
         currentPluginPk &&
-        vsrPluginsPks.includes(currentPluginPk.toBase58())
+        vsrPluginsPks.includes(currentPluginPk.toBase58()) &&
+        ownTokenRecord
       ) {
         handleSetVsrRegistrar(vsrClient, realm)
         if (connected) {
@@ -324,7 +325,7 @@ export function useVotingPlugins() {
         nftPluginsPks.includes(currentPluginPk.toBase58())
       ) {
         handleSetNftRegistrar(nftClient!, realm)
-        if (connected) {
+        if (connected && ownTokenRecord) {
           handleSetCurrentRealmVotingClient({
             client: nftClient,
             realm,
@@ -341,7 +342,7 @@ export function useVotingPlugins() {
         currentPluginPk &&
         pythPluginsPks.includes(currentPluginPk.toBase58())
       ) {
-        if (connected) {
+        if (connected && ownTokenRecord) {
           handleSetCurrentRealmVotingClient({
             client: pythClient,
             realm,

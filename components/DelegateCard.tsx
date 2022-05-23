@@ -119,7 +119,7 @@ const DelegateCard = () => {
         realm.owner, // publicKey of program/programId
         programVersion, // program version of realm
         realm.pubkey, // realm public key
-        type === 'council' && realm?.account?.config?.councilMint
+          type === 'council' && realm?.account?.config?.councilMint
           ? realm?.account?.config?.councilMint
           : realm.account.communityMint, // mint of governance token
         wallet?.publicKey, // governingTokenOwner (walletId) publicKey of tokenOwnerRecord of this wallet
