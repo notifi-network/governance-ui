@@ -13,7 +13,6 @@ import React, {
 import {
   ArrowLeftIcon,
   ChatAltIcon,
-  CheckIcon,
   MailIcon,
   PaperAirplaneIcon,
   ChevronDownIcon,
@@ -46,7 +45,10 @@ type NotificationCardProps = {
   setPreview?: Dispatch<SetStateAction<boolean>>
 }
 
-const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
+const NotificationsCard = ({
+  onBackClick,
+  setPreview,
+}: NotificationCardProps) => {
   const router = useRouter()
   const { cluster } = router.query
   const { councilMint, mint, realm } = useRealm()
@@ -82,6 +84,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
   } = useNotifiClient({
     dappAddress: `solanarealmsdao`,
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
+    // walletPublicKey: wallet?.publicKey?.toString()+`solanarealmsdao` ?? '',
     env,
   })
 
@@ -242,6 +245,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
           }
         }
         onBackClick?.()
+        setPreview?.(true)
         setUnsavedChanges(false)
       } catch (e) {
         handleError([e])
