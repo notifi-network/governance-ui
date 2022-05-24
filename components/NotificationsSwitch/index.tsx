@@ -18,6 +18,13 @@ import Button from '@components/Button'
 import TelegramIcon from './TelegramIcon'
 import NotifiIcon from '@components/NotifiIcon'
 import NotificationsCard from '@components/NotificationsCard'
+import {
+  BlockchainEnvironment,
+  useNotifiClient,
+} from '@notifi-network/notifi-react-hooks'
+import useRealm from '@hooks/useRealm'
+import { EndpointTypes } from '@models/types'
+import NotifiPreviewCard from '@components/NotificationsCard/NotifiPreviewCard'
 
 const REALMS_PUBLIC_KEY = new anchor.web3.PublicKey(
   'BUxZD6aECR5B5MopyvvYqJxwSKDBhx2jSSo1U32en6mj'
@@ -118,10 +125,60 @@ const themeVariables: IncomingThemeVariables = {
 export default function NotificationsSwitch() {
   const { theme } = useTheme()
   const { current: wallet, connection } = useWalletStore()
+  const [showPreview, setPreview] = useState(false)
   const cluster = connection.cluster
   const { modalState, set: setNotificationStore } = useNotificationStore(
     (s) => s
   )
+
+  const [email, setEmail] = useState<string>('')
+  const [phone, setPhone] = useState<string>('')
+  const [telegram, setTelegram] = useState<string>('')
+
+  const { realm } = useRealm()
+
+  let env = BlockchainEnvironment.MainNetBeta
+  const endpoint = cluster ? (cluster as EndpointTypes) : 'mainnet'
+
+  switch (endpoint) {
+    case 'mainnet':
+      break
+    case 'devnet':
+      env = BlockchainEnvironment.DevNet
+      break
+    case 'localnet':
+      env = BlockchainEnvironment.LocalNet
+      break
+  }
+
+  const { data, isAuthenticated } = useNotifiClient({
+    dappAddress: realm?.pubkey?.toBase58() ?? '',
+    walletPublicKey: wallet?.publicKey?.toString() ?? '',
+    env,
+  })
+
+  const firstOrNull = <T,>(
+    arr: ReadonlyArray<T> | null | undefined
+  ): T | null => {
+    if (arr !== null && arr !== undefined) {
+      return arr[0] ?? null
+    }
+    return null
+  }
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const targetGroup = firstOrNull(data?.targetGroups)
+      setEmail(firstOrNull(targetGroup?.emailTargets)?.emailAddress ?? '')
+      setPhone(firstOrNull(targetGroup?.smsTargets)?.phoneNumber ?? '')
+      setTelegram(firstOrNull(targetGroup?.telegramTargets)?.telegramId ?? '')
+      if (targetGroup) {
+        setPreview(true)
+        return
+      }
+      setPreview(false)
+    }
+  }, [data, isAuthenticated()])
 
   const wrapperRef = useRef(null)
   const bellRef = useRef(null)
@@ -144,7 +201,7 @@ export default function NotificationsSwitch() {
   const Tag = ({ channelName }: { channelName: ChannelType }) => {
     return (
       <span>
-        <div className="flex rounded-full items-center bg-bkg-3 px-3 mr-2">
+        <div className="flex rounded-full items-center bg-bkg-3 px-3 mr-2 text-sm">
           {TagToIcon[removeSpaces(channelName)]}
           <StyledChannelName>{channelName}</StyledChannelName>
         </div>
@@ -159,36 +216,49 @@ export default function NotificationsSwitch() {
     modalState,
   }: NotificationSolutionType) => (
     <div className="w-full p-4">
-      <div className="flex flex-col items-center bg-bkg-1 px-10 py-6">
-        <div className="flex w-full">
-          {name === 'notifi' && <NotifiIcon />}
-          <h2 className="inline-block">{name}</h2>
-        </div>
-        <div className="flex w-full items-start mb-4">
-          {channels.map((channel) => (
-            <Tag key={channel} channelName={channel} />
-          ))}
-        </div>
+      {showPreview && name === 'notifi' ? (
+        <NotifiPreviewCard
+          onClick={() =>
+            setNotificationStore((state) => {
+              state.modalState = modalState
+            })
+          }
+          email={email}
+          phone={phone}
+          telegram={telegram}
+        />
+      ) : (
+        <div className="flex flex-col items-center bg-bkg-1 px-10 py-6 text-sm">
+          <div className="flex w-full">
+            {name === 'notifi' && <NotifiIcon />}
+            <h2 className="inline-block">{name}</h2>
+          </div>
+          <div className="flex w-full items-start mb-4">
+            {channels.map((channel) => (
+              <Tag key={channel} channelName={channel} />
+            ))}
+          </div>
 
-        <div className="flex w-full mb-2">
-          <div>
-            <p className="inline-block">{description}</p>
+          <div className="flex w-full mb-2">
+            <div>
+              <p className="inline-block text-sm">{description}</p>
+            </div>
+          </div>
+
+          <div className="flex w-full justify-center pt-3">
+            <Button
+              className="w-full"
+              onClick={() =>
+                setNotificationStore((state) => {
+                  state.modalState = modalState
+                })
+              }
+            >
+              Use {formatName(name)}
+            </Button>
           </div>
         </div>
-
-        <div className="flex w-full justify-center pt-3">
-          <Button
-            className="w-full"
-            onClick={() =>
-              setNotificationStore((state) => {
-                state.modalState = modalState
-              })
-            }
-          >
-            Use {formatName(name)}
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   )
 
@@ -202,10 +272,9 @@ export default function NotificationsSwitch() {
         {...defaultVariables.animations.popup}
       >
         {modalState === ModalStates.Selection && (
-          <div className="w-full h-full bg-bkg-3 absolute top-0 right-0 rounded-lg shadow-md">
-            <div className="h-full flex flex-col items-center py-4">
-              <BellIcon className="h-10 ml-2 w-10" />
-              <h2 className="mb-4 pt-4 font-light">Realms Notifications</h2>
+          <div className="w-fit h-fit bg-bkg-5 -top-4  right-0 absolute rounded-lg shadow-md">
+            <div className="h-full flex flex-col items-center pt-4">
+              <h2 className="mb-2 font-light">Realms Notifications</h2>
               {NotificationSolutions.map((solution) => (
                 <NotificationBox
                   key={solution.name}
@@ -237,6 +306,7 @@ export default function NotificationsSwitch() {
         )}
         {modalState === ModalStates.Notifi && (
           <NotificationsCard
+            setPreview={setPreview}
             onBackClick={() =>
               setNotificationStore((state) => {
                 state.modalState = ModalStates.Selection

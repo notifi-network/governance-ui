@@ -2,13 +2,20 @@ import useRealm from '../../hooks/useRealm'
 import useWalletStore from '../../stores/useWalletStore'
 import Button from '../Button'
 import Input from '../inputs/Input'
-import React, { FunctionComponent, useEffect, useState, Fragment } from 'react'
+import React, {
+  FunctionComponent,
+  useEffect,
+  useState,
+  Fragment,
+  Dispatch,
+  SetStateAction,
+} from 'react'
 import {
   ArrowLeftIcon,
   ChatAltIcon,
-  CheckIcon,
   MailIcon,
   PaperAirplaneIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/solid'
 import {
   BlockchainEnvironment,
@@ -21,7 +28,6 @@ import { EndpointTypes } from '@models/types'
 import { useCallback } from 'react'
 import countryData from '@components/NotificationsCard/data'
 import { Listbox, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/solid'
 
 import NotifiFullLogo from './NotifiFullLogo'
 
@@ -36,9 +42,13 @@ const firstOrNull = <T,>(
 
 type NotificationCardProps = {
   onBackClick?: () => void
+  setPreview?: Dispatch<SetStateAction<boolean>>
 }
 
-const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
+const NotificationsCard = ({
+  onBackClick,
+  setPreview,
+}: NotificationCardProps) => {
   const router = useRouter()
   const { cluster } = router.query
   const { councilMint, mint, realm } = useRealm()
@@ -46,7 +56,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
   const [hasUnsavedChanges, setUnsavedChanges] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [telegramEnabled, setTelegramEnabled] = useState<boolean>(false)
-  const [countryDialCode, setCountryDialCode] = useState<string>('')
+  const [countryDialCode, setCountryDialCode] = useState<string>('+1')
 
   const wallet = useWalletStore((s) => s.current)
   const connected = useWalletStore((s) => s.connected)
@@ -74,9 +84,11 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
   } = useNotifiClient({
     dappAddress: realm?.pubkey?.toBase58() ?? '',
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
+    // walletPublicKey: wallet?.publicKey?.toString()+`solanarealmsdao` ?? '',
     env,
   })
 
+  // TO DO, add solanarealmsdao to signature or add to pubkey
   const [email, setEmail] = useState<string>('')
   const [phone, setPhone] = useState<string>('')
   const [telegram, setTelegram] = useState<string>('')
@@ -117,7 +129,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
           searchCountries.length === 1 ||
           (searchCountries[0] && searchCountries[0].dial_code == '+1')
         ) {
-          setCountryDialCode(possibleCountryCode)
+          setCountryDialCode(possibleCountryCode || '+1')
           break
         }
       }
@@ -225,6 +237,8 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
             }
           }
         }
+        onBackClick?.()
+        setPreview?.(true)
         setUnsavedChanges(false)
       } catch (e) {
         handleError([e])
@@ -289,7 +303,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
   )
 
   return (
-    <div className="bg-bkg-2 p-4 md:p-6 rounded-lg ">
+    <div className="bg-bkg-5 p-4 md:p-6 rounded-lg shadow-lg ">
       <div className=" flex flex-row items-center align-center">
         <Button className="bg-transparent" onClick={onBackClick}>
           <ArrowLeftIcon fill="grey" className="w-6 h-6" />
@@ -343,25 +357,25 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
                 }
               >
                 <Input
-                  className="min-w-11/12 py-3 pl-[120px] px-4 appearance-none w-11/12 outline-0 focus:outline-none"
+                  className="min-w-11/12 py-3 pl-[130px] px-4 appearance-none w-11/12 outline-0 focus:outline-none"
                   type="tel"
                   value={phone}
                   onChange={handlePhone}
                   placeholder="XXX-XXX-XXXX"
                 />
-                <div className="absolute ml-12 inset-y-8 pr-10">
+                <div className="absolute h-10 inset-y-8 pr-10">
                   <Listbox
                     value={countryDialCode}
                     onChange={setCountryDialCode}
                   >
-                    <div className="relative mt-1">
-                      <Listbox.Button className="relative w-full cursor-default mb-1 rounded-lg bg-none py-2 pl-3 pr-7 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 sm:text-sm text-gray-400">
+                    <div className="relative h-10 w-[120px]">
+                      <Listbox.Button className="relative h-[45px] w-full cursor-default rounded-lg bg-none pl-12 pr-5 text-left shadow-md focus:outline-primary-light focus:ring-primary-light focus:ring-1 focus:text-primary-light sm:text-sm text-gray-400">
                         <span className="block truncate">
                           {countryDialCode}
                         </span>
-                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 z-10">
                           <ChevronDownIcon
-                            className="h-5 w-5 text-gray-400"
+                            className="h-5 w-5 text-gray-400 focus:color-primary-light focus:text-primary-light"
                             aria-hidden="true"
                           />
                         </span>
@@ -372,13 +386,13 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
                         leaveFrom="opacity-100"
                         leaveTo="opacity-0"
                       >
-                        <Listbox.Options className="absolute mt-1 max-h-60 w-[120px] overflow-auto rounded-md bg-bkg-3 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                        <Listbox.Options className="absolute z-20 max-h-60 w-[400px] overflow-auto rounded-md bg-bkg-3 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                           {viewableCountries.map(
-                            ({ dial_code, emoji }, idx) => (
+                            ({ dial_code, emoji, name }, idx) => (
                               <Listbox.Option
                                 key={idx}
                                 className={({ active }) =>
-                                  `relative cursor-default select-none py-2 pl-2 pr-4  ${
+                                  `relative cursor-default select-none py-2 pl-2 pr-4 z-20 ${
                                     active
                                       ? 'bg-gray-800 text-grey-300'
                                       : 'text-gray-300'
@@ -393,17 +407,16 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
                                         selected ? 'font-medium' : 'font-normal'
                                       }`}
                                     >
-                                      <span className="pl-7 pr-3">{emoji}</span>
-                                      {dial_code}
+                                      <div className="w-full grid grid-cols-3 gap-3">
+                                        <div className="col-start-1">
+                                          {emoji}
+                                          <span className="pl-3">{name}</span>
+                                        </div>
+                                        <div className="col-start-5 ">
+                                          {dial_code}
+                                        </div>
+                                      </div>
                                     </span>
-                                    {selected ? (
-                                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-white-600">
-                                        <CheckIcon
-                                          className="h-5 w-5"
-                                          aria-hidden="true"
-                                        />
-                                      </span>
-                                    ) : null}
                                   </>
                                 )}
                               </Listbox.Option>
@@ -435,6 +448,19 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
                 </InputRow>
               )}
             </div>
+            <div className=" text-xs  place-items-center  align-items-center grid flex-row text-center">
+              <div className="w-full place-items-center ">
+                Already Subscribed?
+                <a
+                  onClick={handleRefresh}
+                  rel="noreferrer"
+                  className="text-xs text-primary-dark cursor-pointer "
+                  title="Click here to load your alert details."
+                >
+                  {` `} Click here to load your alert details.
+                </a>
+              </div>
+            </div>
             <div className="flex flex-col space-y-4 mt-4 items-center justify-content-center align-items-center">
               <Button
                 tooltipMessage={
@@ -446,16 +472,10 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
                 }
                 className="w-11/12"
                 disabled={disabled}
-                onClick={
-                  hasUnsavedChanges || isAuthenticated()
-                    ? handleSave
-                    : handleRefresh
-                }
+                onClick={handleSave}
                 isLoading={isLoading}
               >
-                {hasUnsavedChanges || isAuthenticated()
-                  ? 'Subscribe'
-                  : 'Refresh'}
+                Subscribe
               </Button>
 
               <div className="h-3 grid text-xs w-full place-items-center">
