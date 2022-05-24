@@ -1,21 +1,89 @@
 import Switch from '@components/Switch'
-import React, { FunctionComponent, useState } from 'react'
+import useRealm from '@hooks/useRealm'
+import { EndpointTypes } from '@models/types'
+import {
+  BlockchainEnvironment,
+  useNotifiClient,
+} from '@notifi-network/notifi-react-hooks'
+import { useRouter } from 'next/router'
+import React, {
+  FunctionComponent,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
+import useWalletStore from 'stores/useWalletStore'
 import NotifiFullLogo from './NotifiFullLogo'
 
 interface NotifiPreviewCardProps {
   onClick: () => void
-  email: string
-  phone: string
-  telegram?: string
   notificationsOn?: boolean
 }
 
 const NotifiPreviewCard: FunctionComponent<NotifiPreviewCardProps> = ({
   onClick,
-  email,
-  phone,
-  telegram,
 }) => {
+  const wallet = useWalletStore((s) => s.current)
+  const router = useRouter()
+  const [telegramEnabled, setTelegramEnabled] = useState<boolean>(false)
+  const { cluster } = router.query
+
+  const { realm } = useRealm()
+
+  let env = BlockchainEnvironment.MainNetBeta
+  const endpoint = cluster ? (cluster as EndpointTypes) : 'mainnet'
+
+  switch (endpoint) {
+    case 'mainnet':
+      break
+    case 'devnet':
+      env = BlockchainEnvironment.DevNet
+      break
+    case 'localnet':
+      env = BlockchainEnvironment.LocalNet
+      break
+  }
+  const { data, getConfiguration } = useNotifiClient({
+    dappAddress: realm?.pubkey?.toBase58() ?? '',
+    walletPublicKey: wallet?.publicKey?.toString() ?? '',
+
+    // NEW PUBLICK KEY FOR SIGNATURE TO SWAP WITH ABOVE
+    // walletPublicKey: wallet?.publicKey?.toString()+`solanarealmsdao` ?? '',
+    env,
+  })
+
+  const [email, setEmail] = useState<string>('')
+  const [phone, setPhone] = useState<string>('')
+  const [telegram, setTelegram] = useState<string>('')
+
+  const updateTelegramSupported = useCallback(async () => {
+    const { supportedTargetTypes } = await getConfiguration()
+    const telegram = supportedTargetTypes.find((it) => it === 'TELEGRAM')
+    setTelegramEnabled(telegram !== undefined)
+  }, [getConfiguration, setTelegramEnabled])
+
+  useEffect(() => {
+    updateTelegramSupported().catch((e) => {
+      console.error('Failed to get supported type information: ', e)
+    })
+  }, [updateTelegramSupported])
+
+  useEffect(() => {
+    const targetGroup = firstOrNull(data?.targetGroups)
+    setEmail(firstOrNull(targetGroup?.emailTargets)?.emailAddress ?? '')
+    setPhone(firstOrNull(targetGroup?.smsTargets)?.phoneNumber ?? '')
+    setTelegram(firstOrNull(targetGroup?.telegramTargets)?.telegramId ?? '')
+  }, [data])
+
+  const firstOrNull = <T,>(
+    arr: ReadonlyArray<T> | null | undefined
+  ): T | null => {
+    if (arr !== null && arr !== undefined) {
+      return arr[0] ?? null
+    }
+    return null
+  }
+
   const handleEdit = () => {
     onClick()
   }
@@ -35,7 +103,7 @@ const NotifiPreviewCard: FunctionComponent<NotifiPreviewCardProps> = ({
       <div className="col-span-12">
         <p className="py-0.5">{email}</p>
         <p className="py-0.5">{phone}</p>
-        <p className="py-0.5">{telegram}</p>
+        {telegramEnabled && <p className="py-0.5">{telegram}</p>}
         <a
           className="text-sm text-primary-dark cursor-pointer pb-2 font-medium"
           onClick={handleEdit}

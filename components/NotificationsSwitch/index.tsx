@@ -18,13 +18,14 @@ import Button from '@components/Button'
 import TelegramIcon from './TelegramIcon'
 import NotifiIcon from '@components/NotifiIcon'
 import NotificationsCard from '@components/NotificationsCard'
+import NotifiPreviewCard from '@components/NotificationsCard/NotifiPreviewCard'
+import { useRouter } from 'next/router'
+import { EndpointTypes } from '@models/types'
 import {
   BlockchainEnvironment,
   useNotifiClient,
 } from '@notifi-network/notifi-react-hooks'
 import useRealm from '@hooks/useRealm'
-import { EndpointTypes } from '@models/types'
-import NotifiPreviewCard from '@components/NotificationsCard/NotifiPreviewCard'
 
 const REALMS_PUBLIC_KEY = new anchor.web3.PublicKey(
   'BUxZD6aECR5B5MopyvvYqJxwSKDBhx2jSSo1U32en6mj'
@@ -124,21 +125,20 @@ const themeVariables: IncomingThemeVariables = {
 
 export default function NotificationsSwitch() {
   const { theme } = useTheme()
-  const { current: wallet, connection } = useWalletStore()
   const [showPreview, setPreview] = useState(false)
-  const cluster = connection.cluster
+  const router = useRouter()
+
+  const { cluster } = router.query
+
   const { modalState, set: setNotificationStore } = useNotificationStore(
     (s) => s
   )
 
-  const [email, setEmail] = useState<string>('')
-  const [phone, setPhone] = useState<string>('')
-  const [telegram, setTelegram] = useState<string>('')
-
-  const { realm } = useRealm()
-
-  let env = BlockchainEnvironment.MainNetBeta
   const endpoint = cluster ? (cluster as EndpointTypes) : 'mainnet'
+  const wallet = useWalletStore((s) => s.current)
+  const connected = useWalletStore((s) => s.connected)
+  const { realm } = useRealm()
+  let env = BlockchainEnvironment.MainNetBeta
 
   switch (endpoint) {
     case 'mainnet':
@@ -150,29 +150,17 @@ export default function NotificationsSwitch() {
       env = BlockchainEnvironment.LocalNet
       break
   }
-
   const { data, isAuthenticated } = useNotifiClient({
     dappAddress: realm?.pubkey?.toBase58() ?? '',
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
+    // NEW PUBLIC KEY FOR SIGNATURE TO SWAP WITH ABOVE
+    // walletPublicKey: wallet?.publicKey?.toString()+`solanarealmsdao` ?? '',
     env,
   })
 
-  const firstOrNull = <T,>(
-    arr: ReadonlyArray<T> | null | undefined
-  ): T | null => {
-    if (arr !== null && arr !== undefined) {
-      return arr[0] ?? null
-    }
-    return null
-  }
-
   useEffect(() => {
-    if (isAuthenticated()) {
-      const targetGroup = firstOrNull(data?.targetGroups)
-      setEmail(firstOrNull(targetGroup?.emailTargets)?.emailAddress ?? '')
-      setPhone(firstOrNull(targetGroup?.smsTargets)?.phoneNumber ?? '')
-      setTelegram(firstOrNull(targetGroup?.telegramTargets)?.telegramId ?? '')
-      if (targetGroup) {
+    if (isAuthenticated() && connected) {
+      if (data?.targetGroups) {
         setPreview(true)
         return
       }
@@ -223,9 +211,6 @@ export default function NotificationsSwitch() {
               state.modalState = modalState
             })
           }
-          email={email}
-          phone={phone}
-          telegram={telegram}
         />
       ) : (
         <div className="flex flex-col items-center bg-bkg-1 px-10 py-6 text-sm">

@@ -58,9 +58,9 @@ const NotificationsCard = ({
   const [telegramEnabled, setTelegramEnabled] = useState<boolean>(false)
   const [countryDialCode, setCountryDialCode] = useState<string>('+1')
 
+  const endpoint = cluster ? (cluster as EndpointTypes) : 'mainnet'
   const wallet = useWalletStore((s) => s.current)
   const connected = useWalletStore((s) => s.connected)
-  const endpoint = cluster ? (cluster as EndpointTypes) : 'mainnet'
   let env = BlockchainEnvironment.MainNetBeta
 
   switch (endpoint) {
@@ -84,6 +84,7 @@ const NotificationsCard = ({
   } = useNotifiClient({
     dappAddress: realm?.pubkey?.toBase58() ?? '',
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
+    // NEW PUBLICK KEY FOR SIGNATURE TO SWAP WITH ABOVE
     // walletPublicKey: wallet?.publicKey?.toString()+`solanarealmsdao` ?? '',
     env,
   })
@@ -163,6 +164,7 @@ const NotificationsCard = ({
     if (!isAuthenticated() && wallet && wallet.publicKey) {
       try {
         await logIn((wallet as unknown) as MessageSigner)
+        setPreview?.(true)
       } catch (e) {
         handleError([e])
       }
