@@ -293,6 +293,7 @@ export function useVotingPlugins() {
     )
   }
   useEffect(() => {
+    console.log('Handlesetvsrclient')
     handleSetVsrClient(wallet, connection)
     handleSetNftClient(wallet, connection)
     handleSetSwitchboardClient(wallet, connection)
@@ -377,6 +378,7 @@ export function useVotingPlugins() {
       currentClient.walletPk?.toBase58() !==
         ownTokenRecord?.account?.governingTokenOwner.toBase58()
     ) {
+      console.log('handlestplugins')
       handleNftplugin()
       handleVsrPlugin()
       handleSwitchboardPlugin()
