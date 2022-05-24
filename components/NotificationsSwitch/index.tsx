@@ -158,14 +158,28 @@ export default function NotificationsSwitch() {
     env,
   })
 
+  const firstOrNull = <T,>(
+    arr: ReadonlyArray<T> | null | undefined
+  ): T | null => {
+    if (arr !== null && arr !== undefined) {
+      return arr[0] ?? null
+    }
+    return null
+  }
+
   useEffect(() => {
     if (isAuthenticated() && connected) {
-      if (data?.targetGroups) {
+      const targetGroup = firstOrNull(data?.targetGroups)
+      const emailTargets = firstOrNull(targetGroup?.emailTargets)
+      const smsTargets = firstOrNull(targetGroup?.smsTargets)
+      const telegramTargets = firstOrNull(targetGroup?.telegramTargets)
+
+      if (emailTargets || smsTargets || telegramTargets) {
         setPreview(true)
         return
       }
-      setPreview(false)
     }
+    setPreview(false)
   }, [data, isAuthenticated()])
 
   const wrapperRef = useRef(null)

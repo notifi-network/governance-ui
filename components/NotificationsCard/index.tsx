@@ -164,7 +164,6 @@ const NotificationsCard = ({
     if (!isAuthenticated() && wallet && wallet.publicKey) {
       try {
         await logIn((wallet as unknown) as MessageSigner)
-        setPreview?.(true)
       } catch (e) {
         handleError([e])
       }
@@ -240,7 +239,6 @@ const NotificationsCard = ({
           }
         }
         onBackClick?.()
-        setPreview?.(true)
         setUnsavedChanges(false)
       } catch (e) {
         handleError([e])
