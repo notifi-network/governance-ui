@@ -84,6 +84,7 @@ const NotificationsCard = ({
   } = useNotifiClient({
     dappAddress: `solanarealmsdao`,
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
+    // NEW PUBLICK KEY FOR SIGNATURE TO SWAP WITH ABOVE
     // walletPublicKey: wallet?.publicKey?.toString()+`solanarealmsdao` ?? '',
     env,
   })
@@ -169,6 +170,7 @@ const NotificationsCard = ({
     if (!isAuthenticated() && wallet && wallet.publicKey) {
       try {
         await logIn((wallet as unknown) as MessageSigner)
+        setPreview?.(true)
       } catch (e) {
         handleError([e])
       }
