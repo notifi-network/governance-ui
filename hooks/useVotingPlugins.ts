@@ -79,7 +79,6 @@ export function useVotingPlugins() {
   const currentClient = useVotePluginsClientStore(
     (s) => s.state.currentRealmVotingClient
   )
-  console.log(currentClient, '@##@#@#@#')
   const currentPluginPk = config?.account.communityVoterWeightAddin
   const nftMintRegistrar = useVotePluginsClientStore(
     (s) => s.state.nftMintRegistrar
@@ -294,7 +293,6 @@ export function useVotingPlugins() {
     )
   }
   useEffect(() => {
-    console.log('Handlesetvsrclient')
     handleSetVsrClient(wallet, connection)
     handleSetNftClient(wallet, connection)
     handleSetSwitchboardClient(wallet, connection)
@@ -306,8 +304,7 @@ export function useVotingPlugins() {
       if (
         vsrClient &&
         currentPluginPk &&
-        vsrPluginsPks.includes(currentPluginPk.toBase58()) &&
-        ownTokenRecord
+        vsrPluginsPks.includes(currentPluginPk.toBase58())
       ) {
         handleSetVsrRegistrar(vsrClient, realm)
         if (connected) {
@@ -327,7 +324,7 @@ export function useVotingPlugins() {
         nftPluginsPks.includes(currentPluginPk.toBase58())
       ) {
         handleSetNftRegistrar(nftClient!, realm)
-        if (connected && ownTokenRecord) {
+        if (connected) {
           handleSetCurrentRealmVotingClient({
             client: nftClient,
             realm,
@@ -344,7 +341,7 @@ export function useVotingPlugins() {
         currentPluginPk &&
         pythPluginsPks.includes(currentPluginPk.toBase58())
       ) {
-        if (connected && ownTokenRecord) {
+        if (connected) {
           handleSetCurrentRealmVotingClient({
             client: pythClient,
             realm,
@@ -379,7 +376,6 @@ export function useVotingPlugins() {
       currentClient.walletPk?.toBase58() !==
         ownTokenRecord?.account?.governingTokenOwner.toBase58()
     ) {
-      console.log('handlestplugins')
       handleNftplugin()
       handleVsrPlugin()
       handleSwitchboardPlugin()

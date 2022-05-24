@@ -126,6 +126,7 @@ const WithdrawModal = ({
       ),
     amount: yup.string().required('Amount is required'),
   })
+  console.log(selectedMangoAccount.spotOpenOrders.map((x) => x.toBase58()))
   const handlePropose = async (idx: number) => {
     const isValid = await validateInstruction({ schema, form, setFormErrors })
     if (!isValid) {
