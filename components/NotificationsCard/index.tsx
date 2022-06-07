@@ -45,10 +45,7 @@ type NotificationCardProps = {
   setPreview?: Dispatch<SetStateAction<boolean>>
 }
 
-const NotificationsCard = ({
-  onBackClick,
-  setPreview,
-}: NotificationCardProps) => {
+const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
   const router = useRouter()
   const { cluster } = router.query
   const { councilMint, mint, realm } = useRealm()
@@ -82,10 +79,8 @@ const NotificationsCard = ({
     updateAlert,
     getConfiguration,
   } = useNotifiClient({
-    dappAddress: realm?.pubkey?.toBase58() ?? '',
+    dappAddress: `solanarealmsdao`,
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
-    // NEW PUBLICK KEY FOR SIGNATURE TO SWAP WITH ABOVE
-    // walletPublicKey: wallet?.publicKey?.toString()+`solanarealmsdao` ?? '',
     env,
   })
 
@@ -93,6 +88,8 @@ const NotificationsCard = ({
   const [email, setEmail] = useState<string>('')
   const [phone, setPhone] = useState<string>('')
   const [telegram, setTelegram] = useState<string>('')
+  //when creating source group, we need a special value
+  // we know which ones are there
 
   const updateTelegramSupported = useCallback(async () => {
     const { supportedTargetTypes } = await getConfiguration()
@@ -109,6 +106,10 @@ const NotificationsCard = ({
 
   useEffect(() => {
     // Update state when server data changes
+
+    //Filter sources
+    // we won't get back any data from soures if we're not a part of any dao.
+
     const targetGroup = firstOrNull(data?.targetGroups)
     setEmail(firstOrNull(targetGroup?.emailTargets)?.emailAddress ?? '')
     const originalPhoneNumber = firstOrNull(targetGroup?.smsTargets)
@@ -190,6 +191,7 @@ const NotificationsCard = ({
     const formattedPhone = `${countryDialCode}` + phone
     const alert = firstOrNull(localData?.alerts)
     const source = firstOrNull(localData?.sources)
+    // we can iterate through and see sources available
     const filter = firstOrNull(localData?.filters)
     if (connected && isAuthenticated()) {
       try {

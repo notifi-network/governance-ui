@@ -1,5 +1,4 @@
 import Switch from '@components/Switch'
-import useRealm from '@hooks/useRealm'
 import { EndpointTypes } from '@models/types'
 import {
   BlockchainEnvironment,
@@ -28,8 +27,6 @@ const NotifiPreviewCard: FunctionComponent<NotifiPreviewCardProps> = ({
   const [telegramEnabled, setTelegramEnabled] = useState<boolean>(false)
   const { cluster } = router.query
 
-  const { realm } = useRealm()
-
   let env = BlockchainEnvironment.MainNetBeta
   const endpoint = cluster ? (cluster as EndpointTypes) : 'mainnet'
 
@@ -44,11 +41,8 @@ const NotifiPreviewCard: FunctionComponent<NotifiPreviewCardProps> = ({
       break
   }
   const { data, getConfiguration } = useNotifiClient({
-    dappAddress: realm?.pubkey?.toBase58() ?? '',
+    dappAddress: `solanarealmsdao`,
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
-
-    // NEW PUBLICK KEY FOR SIGNATURE TO SWAP WITH ABOVE
-    // walletPublicKey: wallet?.publicKey?.toString()+`solanarealmsdao` ?? '',
     env,
   })
 
