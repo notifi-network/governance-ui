@@ -2,6 +2,8 @@ import useRealm from '../../hooks/useRealm'
 import useWalletStore from '../../stores/useWalletStore'
 import Button from '../Button'
 import Input from '../inputs/Input'
+import { isValidNumber } from 'libphonenumber-js'
+
 import React, {
   FunctionComponent,
   useEffect,
@@ -12,10 +14,8 @@ import React, {
 } from 'react'
 import {
   ArrowLeftIcon,
-  ChatAltIcon,
   MailIcon,
   PaperAirplaneIcon,
-  ChevronDownIcon,
 } from '@heroicons/react/solid'
 import {
   BlockchainEnvironment,
@@ -26,10 +26,9 @@ import {
 import { useRouter } from 'next/router'
 import { EndpointTypes } from '@models/types'
 import { useCallback } from 'react'
-import countryData from '@components/NotificationsCard/data'
-import { Listbox, Transition } from '@headlessui/react'
 
 import NotifiFullLogo from './NotifiFullLogo'
+import PhoneInput from './PhoneInput'
 
 const firstOrNull = <T,>(
   arr: ReadonlyArray<T> | null | undefined
@@ -56,7 +55,6 @@ const NotificationsCard = ({
   const [hasUnsavedChanges, setUnsavedChanges] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [telegramEnabled, setTelegramEnabled] = useState<boolean>(false)
-  const [countryDialCode, setCountryDialCode] = useState<string>('+1')
 
   const endpoint = cluster ? (cluster as EndpointTypes) : 'mainnet'
   const wallet = useWalletStore((s) => s.current)
@@ -91,8 +89,12 @@ const NotificationsCard = ({
 
   // TO DO, add solanarealmsdao to signature or add to pubkey
   const [email, setEmail] = useState<string>('')
-  const [phone, setPhone] = useState<string>('')
+  const [phoneNumber, setPhone] = useState<string>('')
   const [telegram, setTelegram] = useState<string>('')
+
+  const targetGroup = firstOrNull(data?.targetGroups)
+  const originalPhoneNumber = firstOrNull(targetGroup?.smsTargets)?.phoneNumber
+
   //when creating source group, we need a special value
   // we know which ones are there
 
@@ -117,37 +119,7 @@ const NotificationsCard = ({
 
     const targetGroup = firstOrNull(data?.targetGroups)
     setEmail(firstOrNull(targetGroup?.emailTargets)?.emailAddress ?? '')
-    const originalPhoneNumber = firstOrNull(targetGroup?.smsTargets)
-      ?.phoneNumber
 
-    let possibleCountryCode = ''
-    const countryMap = [...viewableCountries]
-
-    if (originalPhoneNumber) {
-      for (const letter of originalPhoneNumber) {
-        possibleCountryCode += letter
-        const searchCountries = countryMap.filter(
-          (country) =>
-            country.dial_code.includes(possibleCountryCode) &&
-            possibleCountryCode === country.dial_code
-        )
-
-        if (
-          searchCountries.length === 1 ||
-          (searchCountries[0] && searchCountries[0].dial_code == '+1')
-        ) {
-          setCountryDialCode(possibleCountryCode || '+1')
-          break
-        }
-      }
-    }
-
-    setPhone(
-      firstOrNull(targetGroup?.smsTargets)?.phoneNumber?.substring(
-        possibleCountryCode.length,
-        originalPhoneNumber?.length
-      ) ?? ''
-    )
     setTelegram(firstOrNull(targetGroup?.telegramTargets)?.telegramId ?? '')
   }, [data])
 
@@ -194,10 +166,8 @@ const NotificationsCard = ({
       }
     }
 
-    const formattedPhone = `${countryDialCode}` + phone
     const alert = firstOrNull(localData?.alerts)
     const source = firstOrNull(localData?.sources)
-    // we can iterate through and see sources available
     const filter = firstOrNull(localData?.filters)
     if (connected && isAuthenticated()) {
       try {
@@ -205,10 +175,7 @@ const NotificationsCard = ({
           const alertResult = await updateAlert({
             alertId: alert.id ?? '',
             emailAddress: email === '' ? null : email,
-            phoneNumber:
-              formattedPhone.length < 10 + countryDialCode.length - 1
-                ? null
-                : formattedPhone,
+            phoneNumber: !isValidNumber(phoneNumber) ? null : phoneNumber,
             telegramId: telegram === '' ? null : telegram,
           })
 
@@ -226,10 +193,7 @@ const NotificationsCard = ({
           const alertResult = await createAlert({
             name: `${realm?.account.name} notifications`,
             emailAddress: email === '' ? null : email,
-            phoneNumber:
-              formattedPhone.length < 10 + countryDialCode.length - 1
-                ? null
-                : formattedPhone,
+            phoneNumber: !isValidNumber(phoneNumber) ? null : phoneNumber,
             telegramId: telegram === '' ? null : telegram,
             sourceId: source?.id ?? '',
             filterId: filter?.id ?? '',
@@ -263,13 +227,8 @@ const NotificationsCard = ({
     setUnsavedChanges(true)
   }
 
-  const handlePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-
-    const re = /^[0-9\b]+$/
-    if (val === '' || (re.test(val) && val.length <= 10)) {
-      setPhone(val)
-    }
+  const handlePhone = (input: string) => {
+    setPhone(input)
     setUnsavedChanges(true)
   }
 
@@ -279,37 +238,6 @@ const NotificationsCard = ({
   }
 
   const disabled = isAuthenticated() && !hasUnsavedChanges
-  const allowedCountries = [
-    'United States',
-    'Australia',
-    'Austria',
-    'Belgium',
-    'Brazil',
-    'Canada',
-    'Denmark',
-    'Finland',
-    'France',
-    'Germany',
-    'Hong Kong',
-    'Hungary',
-    'Ireland',
-    'Malaysia',
-    'Norway',
-    'Philippines',
-    'Poland',
-    'Portugal',
-    'Singapore',
-    'South Korea',
-    'Spain',
-    'Sweden',
-    'Switzerland',
-    'Taiwan',
-    'United Kingdom',
-  ]
-
-  const viewableCountries = [...countryData].filter(({ name }) =>
-    allowedCountries.includes(name)
-  )
 
   return (
     <div className="bg-bkg-5 p-4 md:p-6 rounded-lg shadow-lg ">
@@ -359,84 +287,10 @@ const NotificationsCard = ({
                   placeholder="you@email.com"
                 />
               </InputRow>
-              <InputRow
-                label="phone"
-                icon={
-                  <ChatAltIcon className=" z-10 h-10 text-primary-light w-7 mr-1 mt-9 absolute left-3" />
-                }
-              >
-                <Input
-                  className="min-w-11/12 py-3 pl-[130px] px-4 appearance-none w-11/12 outline-0 focus:outline-none"
-                  type="tel"
-                  value={phone}
-                  onChange={handlePhone}
-                  placeholder="XXX-XXX-XXXX"
-                />
-                <div className="absolute h-10 inset-y-8 pr-10">
-                  <Listbox
-                    value={countryDialCode}
-                    onChange={setCountryDialCode}
-                  >
-                    <div className="relative h-10 w-[120px]">
-                      <Listbox.Button className="relative h-[45px] w-full cursor-default rounded-lg bg-none pl-12 pr-5 text-left shadow-md focus:outline-primary-light focus:ring-primary-light focus:ring-1 focus:text-primary-light sm:text-sm text-gray-400">
-                        <span className="block truncate">
-                          {countryDialCode}
-                        </span>
-                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 z-10">
-                          <ChevronDownIcon
-                            className="h-5 w-5 text-gray-400 focus:color-primary-light focus:text-primary-light"
-                            aria-hidden="true"
-                          />
-                        </span>
-                      </Listbox.Button>
-                      <Transition
-                        as={Fragment}
-                        leave="transition ease-in duration-100"
-                        leaveFrom="opacity-100"
-                        leaveTo="opacity-0"
-                      >
-                        <Listbox.Options className="absolute z-20 max-h-60 w-[400px] overflow-auto rounded-md bg-bkg-3 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                          {viewableCountries.map(
-                            ({ dial_code, emoji, name }, idx) => (
-                              <Listbox.Option
-                                key={idx}
-                                className={({ active }) =>
-                                  `relative cursor-default select-none py-2 pl-2 pr-4 z-20 ${
-                                    active
-                                      ? 'bg-gray-800 text-grey-300'
-                                      : 'text-gray-300'
-                                  }`
-                                }
-                                value={dial_code}
-                              >
-                                {({ selected }) => (
-                                  <>
-                                    <span
-                                      className={`block truncate ${
-                                        selected ? 'font-medium' : 'font-normal'
-                                      }`}
-                                    >
-                                      <div className="w-full grid grid-cols-3 gap-3">
-                                        <div className="col-start-1">
-                                          {emoji}
-                                          <span className="pl-3">{name}</span>
-                                        </div>
-                                        <div className="col-start-5 ">
-                                          {dial_code}
-                                        </div>
-                                      </div>
-                                    </span>
-                                  </>
-                                )}
-                              </Listbox.Option>
-                            )
-                          )}
-                        </Listbox.Options>
-                      </Transition>
-                    </div>
-                  </Listbox>
-                </div>
-              </InputRow>
+              <PhoneInput
+                handlePhone={handlePhone}
+                phoneNumber={originalPhoneNumber!}
+              />
               {telegramEnabled && (
                 <InputRow
                   label="Telegram"
@@ -521,7 +375,7 @@ interface InputRowProps {
   icon: React.ReactNode
 }
 
-const InputRow: FunctionComponent<InputRowProps> = ({
+export const InputRow: FunctionComponent<InputRowProps> = ({
   children,
   label,
   icon,
