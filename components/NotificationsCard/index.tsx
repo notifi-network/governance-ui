@@ -2,10 +2,18 @@ import useRealm from '../../hooks/useRealm'
 import useWalletStore from '../../stores/useWalletStore'
 import Button from '../Button'
 import Input from '../inputs/Input'
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import { isValidNumber } from 'libphonenumber-js'
+
+import React, {
+  FunctionComponent,
+  useEffect,
+  useState,
+  Fragment,
+  Dispatch,
+  SetStateAction,
+} from 'react'
 import {
   ArrowLeftIcon,
-  ChatAltIcon,
   MailIcon,
   PaperAirplaneIcon,
 } from '@heroicons/react/solid'
@@ -18,7 +26,9 @@ import {
 import { useRouter } from 'next/router'
 import { EndpointTypes } from '@models/types'
 import { useCallback } from 'react'
+
 import NotifiFullLogo from './NotifiFullLogo'
+import PhoneInput from './PhoneInput'
 
 const firstOrNull = <T,>(
   arr: ReadonlyArray<T> | null | undefined
@@ -31,9 +41,13 @@ const firstOrNull = <T,>(
 
 type NotificationCardProps = {
   onBackClick?: () => void
+  setPreview?: Dispatch<SetStateAction<boolean>>
 }
 
-const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
+const NotificationsCard = ({
+  onBackClick,
+  setPreview,
+}: NotificationCardProps) => {
   const router = useRouter()
   const { cluster } = router.query
   const { councilMint, mint, realm } = useRealm()
@@ -42,9 +56,9 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [telegramEnabled, setTelegramEnabled] = useState<boolean>(false)
 
+  const endpoint = cluster ? (cluster as EndpointTypes) : 'mainnet'
   const wallet = useWalletStore((s) => s.current)
   const connected = useWalletStore((s) => s.connected)
-  const endpoint = cluster ? (cluster as EndpointTypes) : 'mainnet'
   let env = BlockchainEnvironment.MainNetBeta
 
   switch (endpoint) {
@@ -66,14 +80,23 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
     updateAlert,
     getConfiguration,
   } = useNotifiClient({
-    dappAddress: realm?.pubkey?.toBase58() ?? '',
+    dappAddress: `solanarealmsdao`,
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
+    // NEW PUBLICK KEY FOR SIGNATURE TO SWAP WITH ABOVE
+    // walletPublicKey: wallet?.publicKey?.toString()+`solanarealmsdao` ?? '',
     env,
   })
 
+  // TO DO, add solanarealmsdao to signature or add to pubkey
   const [email, setEmail] = useState<string>('')
-  const [phone, setPhone] = useState<string>('')
+  const [phoneNumber, setPhone] = useState<string>('')
   const [telegram, setTelegram] = useState<string>('')
+
+  const targetGroup = firstOrNull(data?.targetGroups)
+  const originalPhoneNumber = firstOrNull(targetGroup?.smsTargets)?.phoneNumber
+
+  //when creating source group, we need a special value
+  // we know which ones are there
 
   const updateTelegramSupported = useCallback(async () => {
     const { supportedTargetTypes } = await getConfiguration()
@@ -90,9 +113,13 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
 
   useEffect(() => {
     // Update state when server data changes
+
+    //Filter sources
+    // we won't get back any data from soures if we're not a part of any dao.
+
     const targetGroup = firstOrNull(data?.targetGroups)
     setEmail(firstOrNull(targetGroup?.emailTargets)?.emailAddress ?? '')
-    setPhone(firstOrNull(targetGroup?.smsTargets)?.phoneNumber ?? '')
+
     setTelegram(firstOrNull(targetGroup?.telegramTargets)?.telegramId ?? '')
   }, [data])
 
@@ -115,6 +142,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
     if (!isAuthenticated() && wallet && wallet.publicKey) {
       try {
         await logIn((wallet as unknown) as MessageSigner)
+        setPreview?.(true)
       } catch (e) {
         handleError([e])
       }
@@ -127,6 +155,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
     setLoading(true)
 
     let localData = data
+
     // user is not authenticated
     if (!isAuthenticated() && wallet && wallet.publicKey) {
       try {
@@ -146,7 +175,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
           const alertResult = await updateAlert({
             alertId: alert.id ?? '',
             emailAddress: email === '' ? null : email,
-            phoneNumber: phone.length < 12 ? null : phone,
+            phoneNumber: !isValidNumber(phoneNumber) ? null : phoneNumber,
             telegramId: telegram === '' ? null : telegram,
           })
 
@@ -154,7 +183,6 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
             if (alertResult.targetGroup?.telegramTargets?.length > 0) {
               const target = alertResult.targetGroup?.telegramTargets[0]
               if (target && !target.isConfirmed) {
-                console.log(target.confirmationUrl)
                 if (target.confirmationUrl) {
                   window.open(target.confirmationUrl)
                 }
@@ -165,7 +193,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
           const alertResult = await createAlert({
             name: `${realm?.account.name} notifications`,
             emailAddress: email === '' ? null : email,
-            phoneNumber: phone.length < 12 ? null : phone,
+            phoneNumber: !isValidNumber(phoneNumber) ? null : phoneNumber,
             telegramId: telegram === '' ? null : telegram,
             sourceId: source?.id ?? '',
             filterId: filter?.id ?? '',
@@ -175,7 +203,6 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
             if (alertResult.targetGroup?.telegramTargets?.length > 0) {
               const target = alertResult.targetGroup?.telegramTargets[0]
               if (target && !target.isConfirmed) {
-                console.log(target.confirmationUrl)
                 if (target.confirmationUrl) {
                   window.open(target.confirmationUrl)
                 }
@@ -183,6 +210,8 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
             }
           }
         }
+        onBackClick?.()
+        setPreview?.(true)
         setUnsavedChanges(false)
       } catch (e) {
         handleError([e])
@@ -198,17 +227,8 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
     setUnsavedChanges(true)
   }
 
-  const handlePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value
-    if (val.length > 1) {
-      val = val.substring(2)
-    }
-
-    const re = /^[0-9\b]+$/
-    if (val === '' || (re.test(val) && val.length <= 10)) {
-      setPhone('+1' + val)
-    }
-
+  const handlePhone = (input: string) => {
+    setPhone(input)
     setUnsavedChanges(true)
   }
 
@@ -220,7 +240,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
   const disabled = isAuthenticated() && !hasUnsavedChanges
 
   return (
-    <div className="bg-bkg-2 p-4 md:p-6 rounded-lg ">
+    <div className="bg-bkg-5 p-4 md:p-6 rounded-lg shadow-lg ">
       <div className=" flex flex-row items-center align-center">
         <Button className="bg-transparent" onClick={onBackClick}>
           <ArrowLeftIcon fill="grey" className="w-6 h-6" />
@@ -256,7 +276,7 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
               <InputRow
                 label="email"
                 icon={
-                  <MailIcon className=" z-10 h-10 text-primary-light w-7 mr-1 mt-9 absolute left-3.5" />
+                  <MailIcon className="z-10 h-10 text-primary-light w-7 mr-1 mt-9 absolute left-3.5" />
                 }
               >
                 <Input
@@ -267,20 +287,10 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
                   placeholder="you@email.com"
                 />
               </InputRow>
-              <InputRow
-                label="email"
-                icon={
-                  <ChatAltIcon className=" z-10 h-10 text-primary-light w-7 mr-1 mt-9 absolute left-3" />
-                }
-              >
-                <Input
-                  className="min-w-11/12 py-3 px-4 appearance-none w-11/12 pl-14 outline-0 focus:outline-none"
-                  type="tel"
-                  value={phone}
-                  onChange={handlePhone}
-                  placeholder="+1 XXX-XXXX"
-                />
-              </InputRow>
+              <PhoneInput
+                handlePhone={handlePhone}
+                phoneNumber={originalPhoneNumber!}
+              />
               {telegramEnabled && (
                 <InputRow
                   label="Telegram"
@@ -301,6 +311,19 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
                 </InputRow>
               )}
             </div>
+            <div className=" text-xs  place-items-center  align-items-center grid flex-row text-center">
+              <div className="w-full place-items-center ">
+                Already Subscribed?
+                <a
+                  onClick={handleRefresh}
+                  rel="noreferrer"
+                  className="text-xs text-primary-dark cursor-pointer "
+                  title="Click here to load your alert details."
+                >
+                  {` `} Click here to load your alert details.
+                </a>
+              </div>
+            </div>
             <div className="flex flex-col space-y-4 mt-4 items-center justify-content-center align-items-center">
               <Button
                 tooltipMessage={
@@ -312,16 +335,10 @@ const NotificationsCard = ({ onBackClick }: NotificationCardProps) => {
                 }
                 className="w-11/12"
                 disabled={disabled}
-                onClick={
-                  hasUnsavedChanges || isAuthenticated()
-                    ? handleSave
-                    : handleRefresh
-                }
+                onClick={handleSave}
                 isLoading={isLoading}
               >
-                {hasUnsavedChanges || isAuthenticated()
-                  ? 'Subscribe'
-                  : 'Refresh'}
+                Subscribe
               </Button>
 
               <div className="h-3 grid text-xs w-full place-items-center">
@@ -358,7 +375,7 @@ interface InputRowProps {
   icon: React.ReactNode
 }
 
-const InputRow: FunctionComponent<InputRowProps> = ({
+export const InputRow: FunctionComponent<InputRowProps> = ({
   children,
   label,
   icon,
