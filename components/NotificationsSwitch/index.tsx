@@ -25,7 +25,6 @@ import {
   BlockchainEnvironment,
   useNotifiClient,
 } from '@notifi-network/notifi-react-hooks'
-import useRealm from '@hooks/useRealm'
 
 const REALMS_PUBLIC_KEY = new anchor.web3.PublicKey(
   'BUxZD6aECR5B5MopyvvYqJxwSKDBhx2jSSo1U32en6mj'
@@ -137,7 +136,6 @@ export default function NotificationsSwitch() {
   const endpoint = cluster ? (cluster as EndpointTypes) : 'mainnet'
   const wallet = useWalletStore((s) => s.current)
   const connected = useWalletStore((s) => s.connected)
-  const { realm } = useRealm()
   let env = BlockchainEnvironment.MainNetBeta
 
   switch (endpoint) {
@@ -218,8 +216,7 @@ export default function NotificationsSwitch() {
     modalState,
   }: NotificationSolutionType) => (
     <div className="w-full p-4">
-      {/* {showPreview && name === 'notifi' ? ( */}
-      {name === 'notifi' ? (
+      {showPreview && name === 'notifi' ? (
         <NotifiPreviewCard
           onClick={() =>
             setNotificationStore((state) => {
