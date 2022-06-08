@@ -151,10 +151,8 @@ export default function NotificationsSwitch() {
       break
   }
   const { data, isAuthenticated } = useNotifiClient({
-    dappAddress: realm?.pubkey?.toBase58() ?? '',
+    dappAddress: 'solanarealmsdao',
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
-    // NEW PUBLIC KEY FOR SIGNATURE TO SWAP WITH ABOVE
-    // walletPublicKey: wallet?.publicKey?.toString()+`solanarealmsdao` ?? '',
     env,
   })
 

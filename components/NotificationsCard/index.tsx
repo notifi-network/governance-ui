@@ -79,10 +79,8 @@ const NotificationsCard = ({
     updateAlert,
     getConfiguration,
   } = useNotifiClient({
-    dappAddress: `solanarealmsdao`,
+    dappAddress: 'solanarealmsdao',
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
-    // NEW PUBLICK KEY FOR SIGNATURE TO SWAP WITH ABOVE
-    // walletPublicKey: wallet?.publicKey?.toString() + `solanarealmsdao` ?? '',
     env,
   })
 
