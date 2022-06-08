@@ -8,7 +8,6 @@ import React, {
   FunctionComponent,
   useEffect,
   useState,
-  Fragment,
   Dispatch,
   SetStateAction,
 } from 'react'
@@ -50,7 +49,7 @@ const NotificationsCard = ({
 }: NotificationCardProps) => {
   const router = useRouter()
   const { cluster } = router.query
-  const { councilMint, mint, realm } = useRealm()
+  const { realm } = useRealm()
   const [isLoading, setLoading] = useState<boolean>(false)
   const [hasUnsavedChanges, setUnsavedChanges] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -83,7 +82,7 @@ const NotificationsCard = ({
     dappAddress: `solanarealmsdao`,
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
     // NEW PUBLICK KEY FOR SIGNATURE TO SWAP WITH ABOVE
-    // walletPublicKey: wallet?.publicKey?.toString()+`solanarealmsdao` ?? '',
+    // walletPublicKey: wallet?.publicKey?.toString() + `solanarealmsdao` ?? '',
     env,
   })
 
@@ -220,8 +219,6 @@ const NotificationsCard = ({
     setLoading(false)
   }
 
-  const hasLoaded = mint || councilMint
-
   const handleEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value)
     setUnsavedChanges(true)
@@ -247,124 +244,111 @@ const NotificationsCard = ({
         </Button>
         <NotifiFullLogo />
       </div>
-
-      {hasLoaded ? (
-        !connected ? (
-          <>
-            <div className="text-sm text-th-fgd-1">
-              Connect wallet to see options
+      {!connected ? (
+        <>
+          <div className="text-sm text-th-fgd-1">
+            Connect wallet to see options
+          </div>
+        </>
+      ) : (
+        <>
+          <div>
+            <div className="text-sm text-th-fgd-1 flex flex-row items-center justify-between mt-4">
+              Get notifications for proposals, voting, and results. Add your
+              email address, phone number, and/or Telegram.
             </div>
-          </>
-        ) : (
-          <>
-            <div>
-              <div className="text-sm text-th-fgd-1 flex flex-row items-center justify-between mt-4">
-                Get notifications for proposals, voting, and results. Add your
-                email address, phone number, and/or Telegram.
-              </div>
-              {errorMessage.length > 0 ? (
-                <div className="text-sm text-red">{errorMessage}</div>
-              ) : (
-                !isAuthenticated() && (
-                  <div className="text-sm text-fgd-3">
-                    When prompted, sign the transaction.
-                  </div>
-                )
-              )}
-            </div>
-            <div className="pb-5">
+            {errorMessage.length > 0 ? (
+              <div className="text-sm text-red">{errorMessage}</div>
+            ) : (
+              !isAuthenticated() && (
+                <div className="text-sm text-fgd-3">
+                  When prompted, sign the transaction.
+                </div>
+              )
+            )}
+          </div>
+          <div className="pb-5">
+            <InputRow
+              label="email"
+              icon={
+                <MailIcon className="z-10 h-10 text-primary-light w-7 mr-1 mt-9 absolute left-3.5" />
+              }
+            >
+              <Input
+                className="min-w-11/12 py-3 px-4 appearance-none w-11/12 pl-14 outline-0 focus:outline-none"
+                type="email"
+                value={email}
+                onChange={handleEmail}
+                placeholder="you@email.com"
+              />
+            </InputRow>
+            <PhoneInput
+              handlePhone={handlePhone}
+              phoneNumber={originalPhoneNumber!}
+            />
+            {telegramEnabled && (
               <InputRow
-                label="email"
+                label="Telegram"
                 icon={
-                  <MailIcon className="z-10 h-10 text-primary-light w-7 mr-1 mt-9 absolute left-3.5" />
+                  <PaperAirplaneIcon
+                    className="z-10 h-10 text-primary-light w-7 mr-1 mt-8 absolute left-3"
+                    style={{ transform: 'rotate(45deg)' }}
+                  />
                 }
               >
                 <Input
-                  className="min-w-11/12 py-3 px-4 appearance-none w-11/12 pl-14 outline-0 focus:outline-none"
-                  type="email"
-                  value={email}
-                  onChange={handleEmail}
-                  placeholder="you@email.com"
+                  className="min-w-11/12 py-3 px-4 appearance-none w-11/12 pl-14 outline-0 focus:outline-none flex"
+                  type="text"
+                  value={telegram}
+                  onChange={handleTelegram}
+                  placeholder="Telegram ID"
                 />
               </InputRow>
-              <PhoneInput
-                handlePhone={handlePhone}
-                phoneNumber={originalPhoneNumber!}
-              />
-              {telegramEnabled && (
-                <InputRow
-                  label="Telegram"
-                  icon={
-                    <PaperAirplaneIcon
-                      className="z-10 h-10 text-primary-light w-7 mr-1 mt-8 absolute left-3"
-                      style={{ transform: 'rotate(45deg)' }}
-                    />
-                  }
-                >
-                  <Input
-                    className="min-w-11/12 py-3 px-4 appearance-none w-11/12 pl-14 outline-0 focus:outline-none flex"
-                    type="text"
-                    value={telegram}
-                    onChange={handleTelegram}
-                    placeholder="Telegram ID"
-                  />
-                </InputRow>
-              )}
-            </div>
-            <div className=" text-xs  place-items-center  align-items-center grid flex-row text-center">
-              <div className="w-full place-items-center ">
-                Already Subscribed?
-                <a
-                  onClick={handleRefresh}
-                  rel="noreferrer"
-                  className="text-xs text-primary-dark cursor-pointer "
-                  title="Click here to load your alert details."
-                >
-                  {` `} Click here to load your alert details.
-                </a>
-              </div>
-            </div>
-            <div className="flex flex-col space-y-4 mt-4 items-center justify-content-center align-items-center">
-              <Button
-                tooltipMessage={
-                  disabled
-                    ? 'No unsaved changes!'
-                    : isAuthenticated()
-                    ? 'Save settings for notifications'
-                    : 'Fetch stored values for existing accounts'
-                }
-                className="w-11/12"
-                disabled={disabled}
-                onClick={handleSave}
-                isLoading={isLoading}
-              >
-                Subscribe
-              </Button>
-
-              <div className="h-3 grid text-xs w-full place-items-center">
-                <a
-                  href="https://www.notifi.network/faqs"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-primary-dark "
-                  title="Questions? Click to learn more!"
-                >
-                  Learn More About Notifi
-                </a>
-              </div>
-            </div>
-          </>
-        )
-      ) : (
-        <div className="flex flex-col items-center">
-          <div className="mt-10">
-            Please select a DAO to start using Notifi.
+            )}
           </div>
-          <div className="animate-pulse bg-bkg-3 h-12 w-full mb-4 mt-10 rounded-lg" />
-          <div className="animate-pulse bg-bkg-3 h-10 w-full mb-4 rounded-lg" />
-          <div className="animate-pulse bg-bkg-3 h-10 w-full  mb-4  rounded-lg" />
-          <div className="animate-pulse bg-bkg-3 w-1/2 h-10  mb-4 flex rounded-lg" />
-        </div>
+          <div className=" text-xs  place-items-center  align-items-center grid flex-row text-center">
+            <div className="w-full place-items-center ">
+              Already Subscribed?
+              <a
+                onClick={handleRefresh}
+                rel="noreferrer"
+                className="text-xs text-primary-dark cursor-pointer "
+                title="Click here to load your alert details."
+              >
+                {` `} Click here to load your alert details.
+              </a>
+            </div>
+          </div>
+          <div className="flex flex-col space-y-4 mt-4 items-center justify-content-center align-items-center">
+            <Button
+              tooltipMessage={
+                disabled
+                  ? 'No unsaved changes!'
+                  : isAuthenticated()
+                  ? 'Save settings for notifications'
+                  : 'Fetch stored values for existing accounts'
+              }
+              className="w-11/12"
+              disabled={disabled}
+              onClick={handleSave}
+              isLoading={isLoading}
+            >
+              Subscribe
+            </Button>
+
+            <div className="h-3 grid text-xs w-full place-items-center">
+              <a
+                href="https://www.notifi.network/faqs"
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-primary-dark "
+                title="Questions? Click to learn more!"
+              >
+                Learn More About Notifi
+              </a>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

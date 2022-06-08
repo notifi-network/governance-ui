@@ -16,7 +16,6 @@ import NotifiFullLogo from './NotifiFullLogo'
 
 interface NotifiPreviewCardProps {
   onClick: () => void
-  notificationsOn?: boolean
 }
 
 const NotifiPreviewCard: FunctionComponent<NotifiPreviewCardProps> = ({
@@ -49,6 +48,7 @@ const NotifiPreviewCard: FunctionComponent<NotifiPreviewCardProps> = ({
   const [email, setEmail] = useState<string>('')
   const [phone, setPhone] = useState<string>('')
   const [telegram, setTelegram] = useState<string>('')
+  const [toggles, setToggles] = useState<any>([])
 
   const updateTelegramSupported = useCallback(async () => {
     const { supportedTargetTypes } = await getConfiguration()
@@ -69,6 +69,25 @@ const NotifiPreviewCard: FunctionComponent<NotifiPreviewCardProps> = ({
     setTelegram(firstOrNull(targetGroup?.telegramTargets)?.telegramId ?? '')
   }, [data])
 
+  // fetch the sources from somewhere
+  const testDaos = [
+    { name: 'Mango Dao', isToggled: true },
+    { name: 'Realms DAO Global', isToggled: false },
+    { name: 'Mango Dao', isToggled: true },
+    { name: 'SERUM Notifications', isToggled: true },
+    { name: 'Mango Dao', isToggled: true },
+    { name: 'Mango Dao', isToggled: true },
+    { name: 'Realms DAO Global', isToggled: false },
+    { name: 'Mango Dao', isToggled: true },
+    { name: 'SERUM Notifications', isToggled: true },
+    { name: 'Mango Dao', isToggled: true },
+    { name: 'Mango Dao', isToggled: true },
+    { name: 'Realms DAO Global', isToggled: false },
+    { name: 'Mango Dao', isToggled: true },
+    { name: 'SERUM Notifications', isToggled: true },
+    { name: 'Mango Dao', isToggled: true },
+  ]
+
   const firstOrNull = <T,>(
     arr: ReadonlyArray<T> | null | undefined
   ): T | null => {
@@ -87,10 +106,38 @@ const NotifiPreviewCard: FunctionComponent<NotifiPreviewCardProps> = ({
   )
 
   //TODO - Complete wiring for mango dao notifications
-  const handleToggleSwitch = () => {
+  const handleToggleSwitch = (index: number) => {
     handleNotifications(!notificationsOn)
+    const modifyArray = [...toggles]
+    modifyArray[index].isToggled = !modifyArray[index].isToggled
+    setToggles(modifyArray)
   }
+
   const [notificationsOn, handleNotifications] = useState(false)
+
+  useEffect(() => {
+    setToggles(testDaos)
+  }, [setToggles])
+
+  const daoNotifications = (dao: any, index: number) => {
+    return (
+      <div
+        key={index}
+        className="items-center snap-center w-full col-span-12 pt-4 flex flex-row justify-between"
+      >
+        <div className="text-xs align-items-center">
+          {dao.name} Notifications On
+        </div>
+        <Switch
+          checked={dao.isToggled}
+          onChange={() => handleToggleSwitch(index)}
+        />
+      </div>
+    )
+  }
+  const notificationsToggle = toggles.map((dao: any, index: number) => {
+    return daoNotifications(dao, index)
+  })
 
   return (
     <div className="grid grid-cols-12 bg-bkg-1 px-10 py-3 text-sm w-full">
@@ -107,11 +154,8 @@ const NotifiPreviewCard: FunctionComponent<NotifiPreviewCardProps> = ({
       </div>
       <Line />
 
-      <div className="items-center w-full col-span-12 pt-6 flex flex-row justify-between">
-        <div className="text-xs align-items-center">
-          Mango DAO Notifications On
-        </div>
-        <Switch checked={notificationsOn} onChange={handleToggleSwitch} />
+      <div className="h-[200px] w-full snap-y col-span-12 overflow-scroll">
+        {notificationsToggle}
       </div>
       <Line />
       <div className="col-span-12 flex flex-row pt-4 items-center">

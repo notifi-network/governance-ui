@@ -125,7 +125,7 @@ const themeVariables: IncomingThemeVariables = {
 
 export default function NotificationsSwitch() {
   const { theme } = useTheme()
-  const [showPreview, setPreview] = useState(false)
+  const [showPreview, setPreview] = useState(true)
   const router = useRouter()
 
   const { cluster } = router.query
@@ -179,7 +179,9 @@ export default function NotificationsSwitch() {
         return
       }
     }
-    setPreview(false)
+    setPreview(true)
+    // default false
+    // setPreview(false)
   }, [data, isAuthenticated()])
 
   const wrapperRef = useRef(null)
@@ -218,7 +220,8 @@ export default function NotificationsSwitch() {
     modalState,
   }: NotificationSolutionType) => (
     <div className="w-full p-4">
-      {showPreview && name === 'notifi' ? (
+      {/* {showPreview && name === 'notifi' ? ( */}
+      {name === 'notifi' ? (
         <NotifiPreviewCard
           onClick={() =>
             setNotificationStore((state) => {
