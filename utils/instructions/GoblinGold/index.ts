@@ -242,11 +242,6 @@ export async function getGoblinGoldDepositInstruction({
     shouldSplitIntoSeparateTxs: true,
   }
 
-<<<<<<< HEAD
-=======
-  console.log('goblingold instruction:', obj)
-
->>>>>>> 58dc870 (Deposit/Withdraw into GoblinGold vaults (#730))
   return obj
 }
 
