@@ -808,6 +808,7 @@
     "website": "https://samoyedcoin.com",
     "twitter": "@Samo_DAO",
     "ogImage": "/realms/SamoDAO/SamoDAO.png"
+<<<<<<< HEAD
     },
     {
       "symbol": "FORE",
@@ -827,5 +828,7 @@
       "website": "https://solend.fi/",
       "twitter": "@solendprotocol",
       "sortRank": 2
+=======
+>>>>>>> 4bb151c (Pulling SamoDao data from mainnet-beta.json (#740))
     }
 ]
