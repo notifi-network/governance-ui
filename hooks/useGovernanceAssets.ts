@@ -327,8 +327,8 @@ export default function useGovernanceAssets() {
       isVisible: canUseAnyInstruction,
     },
     {
-      id: Instructions.WithrawFromCastle,
-      name: 'Castle: Withdraw from Vault',
+      id: Instructions.Base64,
+      name: 'Execute Custom Instruction',
       isVisible: canUseAnyInstruction,
     },
     {
@@ -349,6 +349,26 @@ export default function useGovernanceAssets() {
     {
       id: Instructions.WithdrawFromGoblinGold,
       name: 'GoblinGold: Withdraw from GoblinGold',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.ClaimPendingDeposit,
+      name: 'Friktion: Claim Volt Tokens',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.ClaimPendingWithdraw,
+      name: 'Friktion: Claim Pending Withdraw',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.DepositIntoCastle,
+      name: 'Castle: Deposit into Vault',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.WithrawFromCastle,
+      name: 'Castle: Withdraw from Vault',
       isVisible: canUseAnyInstruction,
     },
     {
