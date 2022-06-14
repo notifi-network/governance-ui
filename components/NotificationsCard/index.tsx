@@ -302,8 +302,8 @@ const NotificationsCard = ({
     errorMessage !== ''
 
   return (
-    <div className="bg-bkg-5 p-4 md:p-6 rounded-lg shadow-lg ">
-      <div className=" flex flex-row items-center align-center">
+    <div className="bg-bkg-5 p-4 md:p-6 rounded-lg shadow-lg">
+      <div className="flex flex-row items-center align-center">
         <Button className="bg-transparent" onClick={onBackClick}>
           <ArrowLeftIcon className="w-6 h-6" fill="grey" />
         </Button>
