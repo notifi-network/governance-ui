@@ -28,7 +28,6 @@ import TransactionLoader from '@components/TransactionLoader'
 
 import dynamic from 'next/dynamic'
 import Head from 'next/head'
-
 const Notifications = dynamic(() => import('../components/Notification'), {
   ssr: false,
 })
