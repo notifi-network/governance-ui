@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import NotificationsCard from '@components/NotificationsCard'
 import NotifiPreviewCard from '@components/NotificationsCard/NotifiPreviewCard'
 import { EndpointTypes } from '@models/types'
@@ -10,6 +11,19 @@ import { firstOrNull } from '@utils/helpers'
 import { useRouter } from 'next/router'
 import { useCallback, useEffect, useState } from 'react'
 import useWalletStore from 'stores/useWalletStore'
+=======
+import { EndpointTypes } from '@models/types'
+import { Source } from '@notifi-network/notifi-core'
+import {
+  BlockchainEnvironment,
+  useNotifiClient,
+} from '@notifi-network/notifi-react-hooks'
+import { useRouter } from 'next-router-mock'
+import React, { useCallback, useEffect, useState } from 'react'
+import useWalletStore from 'stores/useWalletStore'
+import NotificationsCard from '.'
+import NotifiPreviewCard from './NotifiPreviewCard'
+>>>>>>> 391e202 (begins refactoring for flow)
 
 type Props = {
   onBackClick: () => void
@@ -42,6 +56,7 @@ const NotificationCardContainer: React.FC<Props> = ({ onBackClick }) => {
     walletPublicKey: wallet?.publicKey?.toString() ?? '',
   })
 
+<<<<<<< HEAD
   const {
     data,
     isAuthenticated,
@@ -49,6 +64,9 @@ const NotificationCardContainer: React.FC<Props> = ({ onBackClick }) => {
     deleteAlert,
     isInitialized,
   } = notifiClient
+=======
+  const { data, isAuthenticated, getConfiguration, deleteAlert } = notifiClient
+>>>>>>> 391e202 (begins refactoring for flow)
 
   const [email, setEmail] = useState<string>('')
   const [phoneNumber, setPhone] = useState<string>('')
@@ -82,8 +100,22 @@ const NotificationCardContainer: React.FC<Props> = ({ onBackClick }) => {
     })
   }, [updateTelegramSupported])
 
+<<<<<<< HEAD
   useEffect(() => {
     if (isAuthenticated && connected && isInitialized) {
+=======
+  const firstOrNull = <T,>(
+    arr: ReadonlyArray<T> | null | undefined
+  ): T | null => {
+    if (arr !== null && arr !== undefined) {
+      return arr[0] ?? null
+    }
+    return null
+  }
+
+  useEffect(() => {
+    if (isAuthenticated && connected) {
+>>>>>>> 391e202 (begins refactoring for flow)
       const targetGroup = firstOrNull(data?.targetGroups)
 
       if (targetGroup) {
@@ -95,6 +127,7 @@ const NotificationCardContainer: React.FC<Props> = ({ onBackClick }) => {
         setPhone(firstOrNull(data?.smsTargets)?.phoneNumber ?? '')
         setTelegram(firstOrNull(data?.telegramTargets)?.telegramId ?? '')
       }
+<<<<<<< HEAD
     }
 
     // Handles when the alerts.length is the same as sources
@@ -115,6 +148,18 @@ const NotificationCardContainer: React.FC<Props> = ({ onBackClick }) => {
   ])
 
   const handleDelete = useCallback(
+=======
+
+      if (email || phoneNumber || telegram) {
+        setPreview(true)
+        return
+      }
+    }
+    setPreview(false)
+  }, [connected, data, email, isAuthenticated, phoneNumber, telegram])
+
+  const handleUnsubscribe = useCallback(
+>>>>>>> 391e202 (begins refactoring for flow)
     async (source: Source) => {
       try {
         if (data?.alerts) {
@@ -137,6 +182,7 @@ const NotificationCardContainer: React.FC<Props> = ({ onBackClick }) => {
     [data?.alerts, deleteAlert]
   )
 
+<<<<<<< HEAD
   return (
     <div className="h-[507px] w-[446px] absolute -top-4 right-0">
       <div className="bg-bkg-5 w-full h-full rounded-lg">
@@ -187,6 +233,32 @@ const NotificationCardContainer: React.FC<Props> = ({ onBackClick }) => {
         </div>
       </div>
     </div>
+=======
+  return showPreview ? (
+    <NotifiPreviewCard
+      handleDelete={handleUnsubscribe}
+      email={email}
+      // this passes down useNotiClientData
+      {...notifiClient}
+      phoneNumber={phoneNumber}
+      telegram={telegram}
+      telegramEnabled={telegramEnabled}
+      onClick={() => setPreview(false)}
+    />
+  ) : (
+    <NotificationsCard
+      phoneNumber={phoneNumber}
+      email={email}
+      telegram={telegram}
+      setPhone={setPhone}
+      setTelegram={setTelegram}
+      setEmail={setEmail}
+      // this passes down useNotiClientData
+      {...notifiClient}
+      onBackClick={onBackClick}
+      setPreview={setPreview}
+    />
+>>>>>>> 391e202 (begins refactoring for flow)
   )
 }
 

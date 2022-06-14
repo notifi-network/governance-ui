@@ -160,29 +160,6 @@ export default function NotificationsSwitch() {
     )
   }
 
-  const handleUnsubscribe = useCallback(
-    async (source: Source) => {
-      try {
-        if (data?.alerts) {
-          const sourceId = source.id
-          const alertToDelete = data.alerts?.find((alert) =>
-            alert.sourceGroup.sources.find((source) => source.id === sourceId)
-          )
-
-          alertToDelete?.id &&
-            (await deleteAlert({
-              alertId: alertToDelete.id,
-              keepSourceGroup: true,
-              keepTargetGroup: true,
-            }))
-        }
-      } catch (e) {
-        throw new Error(e)
-      }
-    },
-    [data?.alerts, deleteAlert]
-  )
-
   const NotificationBox = ({
     channels,
     description,
@@ -205,21 +182,21 @@ export default function NotificationsSwitch() {
           <div>
             <p className="inline-block text-sm">{description}</p>
           </div>
-
-          <div className="flex w-full justify-center pt-3">
-            <Button
-              className="w-full"
-              onClick={() =>
-                setNotificationStore((state) => {
-                  state.modalState = modalState
-                })
-              }
-            >
-              Use {formatName(name)}
-            </Button>
-          </div>
         </div>
-      )}
+
+        <div className="flex w-full justify-center pt-3">
+          <Button
+            className="w-full"
+            onClick={() =>
+              setNotificationStore((state) => {
+                state.modalState = modalState
+              })
+            }
+          >
+            Use {formatName(name)}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 
