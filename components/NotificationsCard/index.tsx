@@ -28,8 +28,6 @@ import PhoneInput from './PhoneInput'
 
 type NotifiClientReturnType = ReturnType<typeof useNotifiClient>
 
-type NotifiClientReturnType = ReturnType<typeof useNotifiClient>
-
 type NotificationCardProps = {
   onBackClick: () => void
   email: string
@@ -252,7 +250,6 @@ const NotificationsCard = ({
         }
         setUnsavedChanges(false)
       } catch (e) {
-        console.log(e)
         handleError([e])
       }
     }
