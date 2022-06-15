@@ -165,7 +165,6 @@ const NotificationsCard = ({
       if (!isAuthenticated && wallet && wallet.publicKey) {
         try {
           await logIn((wallet as unknown) as MessageSigner)
-          setPreview(true)
         } catch (e) {
           handleError([e])
         }
@@ -173,7 +172,7 @@ const NotificationsCard = ({
       }
       setLoading(false)
     },
-    [setLoading, isAuthenticated, wallet, setErrorMessage, setPreview, logIn]
+    [setLoading, isAuthenticated, wallet, setErrorMessage, logIn]
   )
 
   const handleSave = useCallback(async () => {
