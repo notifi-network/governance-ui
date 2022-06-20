@@ -29,6 +29,15 @@ export async function resolveProposalDescription(descriptionLink: string) {
   }
 }
 
+export function preventNegativeNumberInput(ev) {
+  const value = ev.target.value
+  if (!isNaN(value) && value < 0) {
+    ev.target.value = 0
+  } else if (isNaN(value)) {
+    ev.target.value = value.slice(0, value.length - 1)
+  }
+}
+
 export const firstOrNull = <T>(
   arr: ReadonlyArray<T> | null | undefined
 ): T | null => {
