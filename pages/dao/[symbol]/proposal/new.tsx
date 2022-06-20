@@ -53,6 +53,8 @@ import FriktionDeposit from './components/instructions/Friktion/FriktionDeposit'
 import CreateNftPluginRegistrar from './components/instructions/NftVotingPlugin/CreateRegistrar'
 import CreateNftPluginMaxVoterWeightRecord from './components/instructions/NftVotingPlugin/CreateMaxVoterWeightRecord'
 import ConfigureNftPluginCollection from './components/instructions/NftVotingPlugin/ConfigureCollection'
+import SwitchboardAdmitOracle from './components/instructions/Switchboard/AdmitOracle'
+import SwitchboardRevokeOracle from './components/instructions/Switchboard/RevokeOracle'
 import FriktionWithdraw from './components/instructions/Friktion/FriktionWithdraw'
 import FriktionClaimPendingDeposit from './components/instructions/Friktion/FriktionClaimPendingDeposit'
 import FriktionClaimPendingWithdraw from './components/instructions/Friktion/FriktionClaimPendingWithdraw'
@@ -78,6 +80,7 @@ import VotingMintConfig from './components/instructions/Vsr/VotingMintConfig'
 import CreateVsrRegistrar from './components/instructions/Vsr/CreateRegistrar'
 import GoblinGoldDeposit from './components/instructions/GoblinGold/GoblinGoldDeposit'
 import GoblinGoldWithdraw from './components/instructions/GoblinGold/GoblinGoldWithdraw'
+import MakeSetMarketMode from './components/instructions/Mango/MakeSetMarketMode'
 
 const schema = yup.object().shape({
   title: yup.string().required('Title is required'),
@@ -188,6 +191,7 @@ const New = () => {
     setIsLoadingSignedProposal(false)
     setIsLoadingDraft(false)
   }
+
   const handleCreate = async (isDraft) => {
     setFormErrors({})
     if (isDraft) {
@@ -257,10 +261,16 @@ const New = () => {
 
       try {
         // Fetch governance to get up to date proposalCount
-        selectedGovernance = (await fetchRealmGovernance(
-          governance.pubkey
-        )) as ProgramAccount<Governance>
 
+        if (governance.pubkey != undefined) {
+          selectedGovernance = (await fetchRealmGovernance(
+            governance.pubkey
+          )) as ProgramAccount<Governance>
+        } else {
+          selectedGovernance = (await fetchRealmGovernance(
+            governance
+          )) as ProgramAccount<Governance>
+        }
         proposalAddress = await handleCreateProposal({
           title: form.title,
           description: form.description,
@@ -276,6 +286,7 @@ const New = () => {
 
         router.push(url)
       } catch (ex) {
+        console.log(ex)
         notify({ type: 'error', message: `${ex}` })
       }
     } else {
@@ -283,6 +294,7 @@ const New = () => {
     }
     handleTurnOffLoaders()
   }
+
   useEffect(() => {
     setInstructions([instructionsData[0]])
   }, [instructionsData[0].governedAccount?.pubkey])
@@ -342,6 +354,11 @@ const New = () => {
         return <GoblinGoldDeposit index={idx} governance={governance} />
       case Instructions.WithdrawFromGoblinGold:
         return <GoblinGoldWithdraw index={idx} governance={governance} />
+
+      case Instructions.SwitchboardAdmitOracle:
+        return <SwitchboardAdmitOracle index={idx} _governance={governance} />
+      case Instructions.SwitchboardRevokeOracle:
+        return <SwitchboardRevokeOracle index={idx} _governance={governance} />
 
       case Instructions.CreateSolendObligationAccount:
         return <CreateObligationAccount index={idx} governance={governance} />
@@ -431,6 +448,13 @@ const New = () => {
             index={idx}
             governance={governance}
           ></MakeCreatePerpMarket>
+        )
+      case Instructions.MangoSetMarketMode:
+        return (
+          <MakeSetMarketMode
+            index={idx}
+            governance={governance}
+          ></MakeSetMarketMode>
         )
       case Instructions.ForesightInitMarket:
         return (
@@ -594,8 +618,8 @@ const New = () => {
                       onChange={(value) => setInstructionType({ value, idx })}
                       value={instruction.type?.name}
                     >
-                      {availableInstructionsForIdx.map((inst) => (
-                        <Select.Option key={inst.id} value={inst}>
+                      {availableInstructionsForIdx.map((inst, idx) => (
+                        <Select.Option key={idx} value={inst}>
                           <span>{inst.name}</span>
                         </Select.Option>
                       ))}

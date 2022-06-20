@@ -292,29 +292,9 @@ export default function useGovernanceAssets() {
       isVisible: canUseProgramUpgradeInstruction && symbol === 'MNGO',
     },
     {
-      id: Instructions.Mint,
-      name: 'Mint Tokens',
-      isVisible: canUseMintInstruction,
-    },
-    {
-      id: Instructions.CreateAssociatedTokenAccount,
-      name: 'Create Associated Token Account',
-      isVisible: canUseAnyInstruction,
-    },
-    {
-      id: Instructions.Base64,
-      name: 'Execute Custom Instruction',
-      isVisible: canUseAnyInstruction,
-    },
-    {
-      id: Instructions.VotingMintConfig,
-      name: 'Vote Escrowed Tokens: Configure Voting Mint',
-      isVisible: canUseAuthorityInstruction,
-    },
-    {
-      id: Instructions.CreateVsrRegistrar,
-      name: 'Vote Escrowed Tokens: Create Registrar',
-      isVisible: canUseAuthorityInstruction,
+      id: Instructions.MangoSetMarketMode,
+      name: 'Mango: Set Market Mode',
+      isVisible: canUseProgramUpgradeInstruction && symbol === 'MNGO',
     },
     {
       id: Instructions.DepositIntoVolt,
@@ -324,6 +304,51 @@ export default function useGovernanceAssets() {
     {
       id: Instructions.WithdrawFromVolt,
       name: 'Friktion: Withdraw from Volt',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.ClaimPendingDeposit,
+      name: 'Friktion: Claim Volt Tokens',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.ClaimPendingWithdraw,
+      name: 'Friktion: Claim Pending Withdraw',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.ChangeMakeDonation,
+      name: 'Change: Donation to Charity',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.DepositIntoCastle,
+      name: 'Castle: Deposit into Vault',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.Base64,
+      name: 'Execute Custom Instruction',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.SwitchboardAdmitOracle,
+      name: 'Switchboard: Admit Oracle to Queue',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.SwitchboardRevokeOracle,
+      name: 'Switchboard: Remove Oracle from Queue',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.DepositIntoGoblinGold,
+      name: 'GoblinGold: Deposit into GoblinGold',
+      isVisible: canUseAnyInstruction,
+    },
+    {
+      id: Instructions.WithdrawFromGoblinGold,
+      name: 'GoblinGold: Withdraw from GoblinGold',
       isVisible: canUseAnyInstruction,
     },
     {

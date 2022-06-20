@@ -146,6 +146,20 @@ export interface MangoMakeAddOracleForm {
   oracleAccount: string | undefined
 }
 
+type NameValue = {
+  name: string
+  value: string
+}
+
+export interface MangoMakeSetMarketModeForm {
+  governedAccount: AssetAccount | null
+  mangoGroup: NameValue | null
+  marketIndex: NameValue | null
+  marketMode: NameValue | null
+  marketType: NameValue | null
+  adminPk: string
+}
+
 export interface MangoMakeAddSpotMarketForm {
   governedAccount: AssetAccount | undefined
   programId: string | undefined
@@ -268,6 +282,16 @@ export interface EmptyInstructionForm {
   governedAccount: AssetAccount | undefined
 }
 
+export interface SwitchboardAdmitOracleForm {
+  oraclePubkey: PublicKey | undefined
+  queuePubkey: PublicKey | undefined
+}
+
+export interface SwitchboardRevokeOracleForm {
+  oraclePubkey: PublicKey | undefined
+  queuePubkey: PublicKey | undefined
+}
+
 export interface CreateAssociatedTokenAccountForm {
   governedAccount?: AssetAccount
   splTokenMintUIName?: SplTokenUIName
@@ -317,6 +341,7 @@ export enum Instructions {
   MangoChangeReferralFeeParams,
   MangoChangeSpotMarket,
   MangoCreatePerpMarket,
+  MangoSetMarketMode,
   Grant,
   Clawback,
   CreateAssociatedTokenAccount,
@@ -332,6 +357,8 @@ export enum Instructions {
   InitSolendObligationAccount,
   DepositReserveLiquidityAndObligationCollateral,
   WithdrawObligationCollateralAndRedeemReserveLiquidity,
+  SwitchboardAdmitOracle,
+  SwitchboardRevokeOracle,
   RefreshSolendObligation,
   RefreshSolendReserve,
   ForesightInitMarket,

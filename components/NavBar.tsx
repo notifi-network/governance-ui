@@ -22,11 +22,9 @@ const NavBar = () => {
             </picture>
           </div>
         </Link>
-        <div className="flex flex-wrap items-center justify-end">
-          <div className="justify-between hidden mx-4 space-x-4 sm:flex">
-            <ThemeSwitch />
-            <NotificationsSwitch />
-          </div>
+        <div className="flex items-center justify-end space-x-2 md:space-x-4">
+          <ThemeSwitch />
+          <NotificationsSwitch />
           <ConnectWalletButton />
         </div>
       </div>
